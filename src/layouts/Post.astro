@@ -1,6 +1,7 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base from './Base.astro';
 
+// frontmatter が未定義でも落ちないようにデフォルトを入れる
 const { frontmatter = {}, headings = [] } = Astro.props ?? {};
 const {
   title = 'Untitled',
