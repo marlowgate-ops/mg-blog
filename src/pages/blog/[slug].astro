@@ -7,12 +7,12 @@ export const prerender = true;
 const { slug } = Astro.params;
 const entry = await getEntryBySlug('blog', slug);
 if (!entry) {
-  // 該当記事が無ければ一覧へ
+  // 記事が無ければ一覧へ戻す
   return Astro.redirect('/');
 }
 
 const { Content } = await entry.render();
-// frontmatter は entry.data として取得（未定義でも空にフォールバック）
+// frontmatter は entry.data を安全に参照（未定義でも空オブジェクト）
 const fm = entry.data ?? {};
 const title = fm.title ?? 'Untitled';
 const description = fm.description ?? '';
