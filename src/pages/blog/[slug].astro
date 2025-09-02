@@ -1,17 +1,27 @@
 ---
-import { getCollection, getEntryBySlug } from 'astro:content';
-import Post from '@/layouts/Post.astro';
+import Post from '../../layouts/Post.astro';
+import { getEntryBySlug } from 'astro:content';
 
-export async function getStaticPaths() {
-  const posts = await getCollection('blog');
-  return posts.map((p) => ({ params: { slug: p.slug } }));
-}
+export const prerender = true;
 
 const { slug } = Astro.params;
 const entry = await getEntryBySlug('blog', slug);
-if (!entry) throw new Error('Post not found');
-const { Content, data } = await entry.render();
+
+if (!entry) {
+  // If not found, go back to the blog list
+  return Astro.redirect('/blog/');
+}
+
+// Render MDX/Markdown content and extract validated frontmatter as `data`
+const { Content } = await entry.render();
+const { title, description, pubDate, updatedDate, heroImage } = entry.data;
 ---
-<Post frontmatter={data}>
+<Post
+  title={title}
+  description={description}
+  pubDate={pubDate}
+  updatedDate={updatedDate}
+  heroImage={heroImage}
+>
   <Content />
 </Post>
