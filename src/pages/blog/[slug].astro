@@ -1,5 +1,5 @@
 ---
-import Post from '@/layouts/Post.astro';
+import Post from '../../layouts/Post.astro';
 import { getEntryBySlug } from 'astro:content';
 
 export const prerender = true;
@@ -7,12 +7,9 @@ export const prerender = true;
 const { slug } = Astro.params;
 const entry = await getEntryBySlug('blog', slug);
 if (!entry) {
-  // Not found -> back to list
   return Astro.redirect('/');
 }
 
-// NOTE: entry.render() returns { Content, headings } — NOT 'data'.
-// Use entry.data as validated frontmatter.
 const { Content } = await entry.render();
 const data = entry.data;
 ---
