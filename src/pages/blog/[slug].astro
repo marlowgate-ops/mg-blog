@@ -11,7 +11,10 @@ if (!entry) {
   return Astro.redirect('/');
 }
 
-const { Content, data } = await entry.render(); // data = validated frontmatter
+// NOTE: entry.render() returns { Content, headings } — NOT 'data'.
+// Use entry.data as validated frontmatter.
+const { Content } = await entry.render();
+const data = entry.data;
 ---
 <Post frontmatter={data}>
   <Content />
