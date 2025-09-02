@@ -1,5 +1,5 @@
 ---
-import Post from '../../layouts/Post.astro';
+import Base from '../../layouts/Base.astro';
 import { getEntryBySlug } from 'astro:content';
 
 export const prerender = true;
@@ -7,12 +7,32 @@ export const prerender = true;
 const { slug } = Astro.params;
 const entry = await getEntryBySlug('blog', slug);
 if (!entry) {
+  // 該当記事が無ければ一覧へ
   return Astro.redirect('/');
 }
 
 const { Content } = await entry.render();
-const data = entry.data;
+// frontmatter は entry.data として取得（未定義でも空にフォールバック）
+const fm = entry.data ?? {};
+const title = fm.title ?? 'Untitled';
+const description = fm.description ?? '';
+const pubDate = fm.pubDate ?? null;
+const updatedDate = fm.updatedDate ?? null;
+const ogImage = fm.ogImage ?? 'https://marlowgate.com/og/blog-default_v1.png';
 ---
-<Post frontmatter={data}>
-  <Content />
-</Post>
+<Base title={`${title} | Marlow Gate`} description={description}>
+  <article class="card">
+    <header>
+      <h1>{title}</h1>
+      {(pubDate || updatedDate) && (
+        <p style="color:var(--muted);margin-top:4px;">
+          {pubDate && `公開: ${new Date(pubDate).toLocaleDateString('ja-JP')}`}
+          {updatedDate && ` / 更新: ${new Date(updatedDate).toLocaleDateString('ja-JP')}`}
+        </p>
+      )}
+      <meta property="og:image" content={ogImage} />
+      <meta name="twitter:image" content={ogImage} />
+    </header>
+    <Content />
+  </article>
+</Base>
