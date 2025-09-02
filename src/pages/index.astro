@@ -4,17 +4,24 @@ import { getCollection } from 'astro:content';
 
 export const prerender = true;
 
-const posts = (await getCollection('blog', ({ data }) => !data.draft))
-  .sort((a, b) => new Date(b.data.pubDate) - new Date(a.data.pubDate));
+const posts = (await getCollection('blog'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => {
+    const ta = new Date(a.data.pubDate || 0).getTime();
+    const tb = new Date(b.data.pubDate || 0).getTime();
+    return tb - ta;
+  });
 ---
 <Base title="Blog" description="Marlow Gate の公式ブログ（日本語）。マクロ、カレンダー、自動化の実務ノウハウ。">
   <h1>Blog</h1>
   <div class="grid">
-    {posts.map(p => (
+    {posts.map((p) => (
       <a class="card" href={`/blog/${p.slug}/`}>
-        <h3 style="margin:0 0 8px 0;">{p.data.title}</h3>
-        <p style="color:var(--muted);margin:0 0 12px 0;">{new Date(p.data.pubDate).toLocaleDateString('ja-JP')}</p>
-        <p style="margin:0;">{p.data.description}</p>
+        <h3 style="margin:0 0 8px 0;">{p.data.title || 'Untitled'}</h3>
+        <p style="color:var(--muted);margin:0 0 12px 0;">
+          {p.data.pubDate ? new Date(p.data.pubDate).toLocaleDateString('ja-JP') : ''}
+        </p>
+        <p style="margin:0;">{p.data.description || ''}</p>
       </a>
     ))}
   </div>
