@@ -1,34 +1,22 @@
 ---
-title: ""
-description: ""
-lang: ja
+const { title = 'Marlow Gate', description = '' } = Astro.props ?? {};
 ---
 <!doctype html>
-<html lang="{lang}">
+<html lang="ja">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title ? `${title} | Marlow Gate` : 'Marlow Gate'}</title>
-    <meta name="description" content="{description}" />
-    <link rel="canonical" href={`https://marlowgate.com${Astro.url.pathname}`} />
-    <meta property="og:type" content="website" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
     <meta property="og:site_name" content="Marlow Gate" />
-    <meta property="og:title" content="{title ? `${title} | Marlow Gate` : 'Marlow Gate'}" />
-    <meta property="og:description" content="{description}" />
-    <meta property="og:image" content="https://marlowgate.com/og/blog-default_v1.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{title ? `${title} | Marlow Gate` : 'Marlow Gate'}" />
-    <meta name="twitter:description" content="{description}" />
-    <meta name="twitter:image" content="https://marlowgate.com/og/blog-default_v1.png" />
-    <link rel="alternate" type="application/rss+xml" href="/rss.xml" />
     <style>
       :root { --bg:#0b1220; --txt:#e8ecff; --muted:#aabbdB; --link:#40ccd5; --card:#121a2b; }
-      *{box-sizing:border-box}
-      body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.7 system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans JP', sans-serif}
-      a{color:var(--link);text-decoration:none}
-      a:hover{text-decoration:underline}
+      *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans JP',sans-serif}
+      a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
       .container{max-width:960px;margin:0 auto;padding:24px}
       header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
       nav a{margin-left:12px}
@@ -42,7 +30,7 @@ lang: ja
       <header>
         <a href="/">Marlow Gate</a>
         <nav>
-          <a href="/blog/">Blog</a>
+          <a href="/">Blog</a>
           <a href="/calendars/">Calendars</a>
           <a href="https://store.marlowgate.com">Store</a>
         </nav>
