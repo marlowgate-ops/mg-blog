@@ -1,7 +1,6 @@
 ---
-import Base from './Base.astro';
+import Base from '../layouts/Base.astro';
 
-// Safer: frontmatter is optional; destructure with defaults
 const { frontmatter = {}, headings = [] } = Astro.props ?? {};
 const {
   title = 'Untitled',
@@ -26,17 +25,6 @@ const pageDesc = description || 'Marlow Gate blog article';
       )}
       <meta property="og:image" content={ogImage ?? 'https://marlowgate.com/og/blog-default_v1.png'} />
       <meta name="twitter:image" content={ogImage ?? 'https://marlowgate.com/og/blog-default_v1.png'} />
-      <script type="application/ld+json">
-        {JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Article",
-          "headline": title,
-          "datePublished": pubDate ?? null,
-          "dateModified": updatedDate ?? pubDate ?? null,
-          "mainEntityOfPage": `https://blog.marlowgate.com${Astro.url.pathname}`,
-          "publisher": {"@type": "Organization","name": "Marlow Gate"}
-        })}
-      </script>
     </header>
     <slot />
   </article>
