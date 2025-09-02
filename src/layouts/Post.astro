@@ -1,27 +1,40 @@
 ---
 import Base from './Base.astro';
-const { frontmatter, headings } = Astro.props;
-const { title, description, pubDate, updatedDate, ogImage } = frontmatter;
+
+// Safer: frontmatter is optional; destructure with defaults
+const { frontmatter = {}, headings = [] } = Astro.props ?? {};
+const {
+  title = 'Untitled',
+  description = '',
+  pubDate,
+  updatedDate,
+  ogImage
+} = frontmatter;
+
+const pageTitle = title ? `${title} | Marlow Gate` : 'Marlow Gate';
+const pageDesc = description || 'Marlow Gate blog article';
 ---
-<Base title={title} description={description}>
+<Base title={pageTitle} description={pageDesc}>
   <article class="card">
     <header>
       <h1>{title}</h1>
-      <p style="color:var(--muted);margin-top:4px;">
-        公開: {new Date(pubDate).toLocaleDateString('ja-JP')} 
-        {updatedDate ? ` / 更新: ${new Date(updatedDate).toLocaleDateString('ja-JP')}` : ''}
-      </p>
+      {(pubDate || updatedDate) && (
+        <p style="color:var(--muted);margin-top:4px;">
+          {pubDate && `公開: ${new Date(pubDate).toLocaleDateString('ja-JP')}`}
+          {updatedDate && ` / 更新: ${new Date(updatedDate).toLocaleDateString('ja-JP')}`}
+        </p>
+      )}
       <meta property="og:image" content={ogImage ?? 'https://marlowgate.com/og/blog-default_v1.png'} />
       <meta name="twitter:image" content={ogImage ?? 'https://marlowgate.com/og/blog-default_v1.png'} />
       <script type="application/ld+json">
         {JSON.stringify({
-          "@context":"https://schema.org",
-          "@type":"Article",
+          "@context": "https://schema.org",
+          "@type": "Article",
           "headline": title,
-          "datePublished": pubDate,
-          "dateModified": updatedDate ?? pubDate,
-          "mainEntityOfPage": `https://marlowgate.com${Astro.url.pathname}`,
-          "publisher": {"@type":"Organization","name":"Marlow Gate"}
+          "datePublished": pubDate ?? null,
+          "dateModified": updatedDate ?? pubDate ?? null,
+          "mainEntityOfPage": `https://blog.marlowgate.com${Astro.url.pathname}`,
+          "publisher": {"@type": "Organization","name": "Marlow Gate"}
         })}
       </script>
     </header>
