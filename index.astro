@@ -1,0 +1,17 @@
+---
+import Base from '@/layouts/Base.astro';
+import { getCollection } from 'astro:content';
+const posts = (await getCollection('blog')).sort((a,b)=>+new Date(b.data.pubDate)-+new Date(a.data.pubDate));
+---
+<Base title="Blog" description="Marlow Gate の公式ブログ（日本語）。マクロ、カレンダー、自動化の実務ノウハウ。">
+  <h1>Blog</h1>
+  <div class="grid">
+    {posts.map(p => (
+      <a class="card" href={`/blog/${p.slug}/`}>
+        <h3 style="margin:0 0 8px 0;">{p.data.title}</h3>
+        <p style="color:var(--muted);margin:0 0 12px 0;">{new Date(p.data.pubDate).toLocaleDateString('ja-JP')}</p>
+        <p style="margin:0;">{p.data.description}</p>
+      </a>
+    ))}
+  </div>
+</Base>
