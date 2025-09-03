@@ -1,8 +1,5 @@
 User-agent: *
 Allow: /
-Sitemap: https://blog.marlowgate.com/rss.xml
-User-agent: *
-Allow: /
 
-Sitemap: https://blog.marlowgate.com/rss.xml
 Sitemap: https://blog.marlowgate.com/sitemap-index.xml
+Sitemap: https://blog.marlowgate.com/sitemap.xml
