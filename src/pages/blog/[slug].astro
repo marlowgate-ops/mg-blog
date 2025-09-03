@@ -1,16 +1,22 @@
 ---
-import Base from "../../layouts/Base.astro";
-import Post from "../../layouts/Post.astro";
-import { getEntryBySlug } from "astro:content";
+import Post from '../../layouts/Post.astro';
+import { getCollection } from 'astro:content';
 
-const { slug } = Astro.params;
-const entry = await getEntryBySlug("blog", slug);
-if (!entry) throw new Error(`Post not found: ${slug}`);
-const { Content } = await entry.render();
-const { title, description, pubDate } = entry.data;
+// 動的ルートに必要
+export async function getStaticPaths() {
+  const posts = await getCollection('blog'); // src/content/blog/*.mdx を収集
+  return posts.map((post) => ({
+    params: { slug: post.slug },   // URL: /blog/<slug>
+    props: { post },               // ページに post を渡す
+  }));
+}
+
+const { post } = Astro.props;
+const { data } = post;             // frontmatter
+const { Content } = await post.render(); // MDX本文レンダリング用コンポーネント
 ---
-<Base title={title} description={description}>
-  <Post title={title} description={description} pubDate={pubDate}>
-    <Content />
-  </Post>
-</Base>
+
+<!-- ページのレイアウトに差し込み -->
+<Post {data}>
+  <Content />
+</Post>
