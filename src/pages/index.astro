@@ -1,28 +1,58 @@
 ---
-import Base from '../layouts/Base.astro';
 import { getCollection } from 'astro:content';
-
 export const prerender = true;
 
 const posts = (await getCollection('blog'))
-  .filter((p) => !p.data.draft)
+  .filter((p) => !p.data?.draft)
   .sort((a, b) => {
-    const ta = new Date(a.data.pubDate || 0).getTime();
-    const tb = new Date(b.data.pubDate || 0).getTime();
+    const ta = new Date(a.data?.pubDate || 0).getTime();
+    const tb = new Date(b.data?.pubDate || 0).getTime();
     return tb - ta;
   });
 ---
-<Base title="Blog" description="Marlow Gate の公式ブログ（日本語）。マクロ、カレンダー、自動化の実務ノウハウ。">
-  <h1>Blog</h1>
-  <div class="grid">
-    {posts.map((p) => (
-      <a class="card" href={`/blog/${p.slug}/`}>
-        <h3 style="margin:0 0 8px 0;">{p.data.title || 'Untitled'}</h3>
-        <p style="color:var(--muted);margin:0 0 12px 0;">
-          {p.data.pubDate ? new Date(p.data.pubDate).toLocaleDateString('ja-JP') : ''}
-        </p>
-        <p style="margin:0;">{p.data.description || ''}</p>
-      </a>
-    ))}
-  </div>
-</Base>
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blog | Marlow Gate</title>
+    <meta name="description" content="Marlow Gate の公式ブログ（日本語）。マクロ、カレンダー、自動化の実務ノウハウ。" />
+    <style>
+      :root { --bg:#0b1220; --txt:#e8ecff; --muted:#aabbdB; --link:#40ccd5; --card:#121a2b; }
+      *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans JP',sans-serif}
+      a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+      .container{max-width:960px;margin:0 auto;padding:24px}
+      .card{background:var(--card);border-radius:14px;padding:18px}
+      .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+      header.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+      footer{margin:36px 0 20px;color:var(--muted)}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="nav">
+        <a href="/">Marlow Gate</a>
+        <nav>
+          <a href="/">Blog</a>
+          <a href="/calendars/">Calendars</a>
+          <a href="https://store.marlowgate.com">Store</a>
+        </nav>
+      </header>
+      <main>
+        <h1>Blog</h1>
+        <div class="grid">
+          {posts.map(p => (
+            <a class="card" href={`/blog/${p.slug}/`}>
+              <h3 style="margin:0 0 8px 0;">{p.data?.title || 'Untitled'}</h3>
+              <p style="color:var(--muted);margin:0 0 12px 0;">
+                {p.data?.pubDate ? new Date(p.data.pubDate).toLocaleDateString('ja-JP') : ''}
+              </p>
+              <p style="margin:0;">{p.data?.description || ''}</p>
+            </a>
+          ))}
+        </div>
+      </main>
+      <footer>© {new Date().getFullYear()} Marlow Gate</footer>
+    </div>
+  </body>
+</html>
