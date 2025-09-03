@@ -1,0 +1,17 @@
+---
+const {
+  title = 'Untitled',
+  description = '',
+  pubDate,
+  updatedDate
+} = Astro.props ?? {};
+---
+<slot name="head" />
+<article class="card">
+  <h1>{title}</h1>
+  <p class="muted">
+    {pubDate ? new Date(pubDate).toLocaleDateString() : ''}
+    {updatedDate ? ` • updated ${new Date(updatedDate).toLocaleDateString()}` : ''}
+  </p>
+  <slot />
+</article>

@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getEntryBySlug } from 'astro:content';
+
+const slug = Astro.params.slug;
+const entry = slug ? await getEntryBySlug('blog', slug) : null;
+
+if (!entry) {
+  // Not found → Astro will serve 404 automatically if we set status.
+  return Astro.response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const fm = entry.data ?? {};
+const title = fm.title ?? entry.slug;
+const description = fm.description ?? '';
+const pubDate = fm.pubDate ?? undefined;
+const updatedDate = fm.updatedDate ?? undefined;
+
+// MDX/MD rendering
+const { Content } = await entry.render();
+
+const og = '/og/blog-default_v1.png';
+---
+<Base title={`${title} — Marlow Gate`} description={description}>
+  <Fragment slot="head">
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content={og} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={og} />
+    <link rel="canonical" href={`/blog/${entry.slug}/`} />
+  </Fragment>
+
+  <section class="card">
+    <h1 style="margin-top:0;">{title}</h1>
+    <p class="muted">
+      {pubDate ? new Date(pubDate).toLocaleDateString() : ''}
+      {updatedDate ? ` • updated ${new Date(updatedDate).toLocaleDateString()}` : ''}
+    </p>
+    <Content />
+  </section>
+</Base>
