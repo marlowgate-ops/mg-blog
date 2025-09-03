@@ -1,0 +1,21 @@
+---
+// SiteFooter.astro
+// Usage: Place <SiteFooter /> at the end of your main layout (before </body>)
+const YEAR = new Date().getFullYear();
+---
+<footer class="mt-16 border-t border-gray-200 py-10 text-sm text-gray-600">
+  <div class="mx-auto max-w-5xl px-4 grid gap-4 sm:grid-cols-2">
+    <div class="space-y-2">
+      <strong class="block text-gray-800">Marlow Gate</strong>
+      <nav class="flex flex-wrap gap-4">
+        <a href="/rss.xml" aria-label="RSS">RSS</a>
+        <a href="/sitemap.xml" aria-label="Sitemap">Sitemap</a>
+        <a href="/about/" aria-label="About">About</a>
+        <a href="/store/" aria-label="Store">Store</a>
+      </nav>
+    </div>
+    <div class="sm:text-right">
+      <p>© {YEAR} Marlow Gate — All rights reserved.</p>
+    </div>
+  </div>
+</footer>
