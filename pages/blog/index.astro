@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getCollection } from 'astro:content';
+
+const all = (await getCollection('blog')).filter(p => !p.data?.draft);
+all.sort((a,b) => {
+  const da = a.data?.pubDate ? new Date(a.data.pubDate).getTime() : 0;
+  const db = b.data?.pubDate ? new Date(b.data.pubDate).getTime() : 0;
+  return db - da;
+});
+---
+<Base title="Blog — Marlow Gate" description="Updates and notes">
+  <h1>Blog</h1>
+  <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px,1fr));">
+    {all.map(p => (
+      <a class="card" href={`/blog/${p.slug}/`}>
+        <h3 style="margin:0 0 8px 0;">{p.data?.title ?? p.slug}</h3>
+        <p class="muted" style="margin:0 0 12px 0;">
+          {(p.data?.pubDate && new Date(p.data.pubDate).toLocaleDateString()) || ''}
+        </p>
+        <p style="margin:0;">{p.data?.description ?? ''}</p>
+      </a>
+    ))}
+  </div>
+</Base>
