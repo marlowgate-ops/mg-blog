@@ -1,18 +1,50 @@
-import rss from '@astrojs/rss';
-import { getCollection } from 'astro:content';
+export const prerender = true;
 
-export async function GET(context) {
-  const posts = await getCollection('blog');
-  const site = context.site?.toString() || (import.meta.env.SITE ?? 'https://example.com');
-  return rss({
-    title: 'Marlow Gate Blog',
-    description: 'Updates from Marlow Gate',
-    site,
-    items: posts.map((post) => ({
-      title: post.data.title,
-      description: post.data.description,
-      pubDate: post.data.pubDate,
-      link: `/blog/${post.slug}/`,
-    })),
+const SITE = "https://blog.marlowgate.com";
+const TITLE = "Marlow Gate Blog";
+const DESCRIPTION = "Trading data & automation — notes, releases, and guides.";
+
+function escapeXml(s="") {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+export async function GET() {
+  const posts = await Promise.all([
+    Astro.glob("../../content/blog/*.{md,mdx}"),
+    Astro.glob("../blog/*.{md,mdx}")
+  ]);
+
+  const items = posts.flat()
+    .filter((p) => p?.frontmatter?.draft !== true)
+    .map((p) => ({
+      url: SITE + (p.url || p.frontmatter?.url || "/"),
+      title: p.frontmatter?.title || "Untitled",
+      pubDate: p.frontmatter?.pubDate || p.frontmatter?.date,
+      description: p.frontmatter?.description || ""
+    }));
+
+  const itemsXml = items.map((it) => `
+    <item>
+      <title>${escapeXml(it.title)}</title>
+      <link>${it.url}</link>
+      ${it.pubDate ? `<pubDate>${new Date(it.pubDate).toUTCString()}</pubDate>` : ""}
+      ${it.description ? `<description>${escapeXml(it.description)}</description>` : ""}
+      <guid>${it.url}</guid>
+    </item>
+  `).join("");
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>${escapeXml(TITLE)}</title>
+  <link>${SITE}/</link>
+  <description>${escapeXml(DESCRIPTION)}</description>
+  ${itemsXml}
+</channel>
+</rss>`;
+
+  return new Response(xml, {
+    headers: { "Content-Type": "application/rss+xml; charset=utf-8" }
   });
 }
