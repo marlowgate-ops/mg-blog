@@ -1,0 +1,18 @@
+---
+export interface Props {
+  title: string;
+  description?: string;
+  pubDate?: Date;
+}
+const { title, description, pubDate } = Astro.props as Props;
+---
+<article>
+  <h1 style="font-size:2rem; line-height:1.3; margin:0 0 8px 0;">{title}</h1>
+  {description && <p style="color:#666; margin:0 0 16px 0;">{description}</p>}
+  {pubDate && <time datetime={pubDate.toISOString()} style="color:#888; font-size:.9rem;">
+    {pubDate.toDateString()}
+  </time>}
+  <div style="margin-top:24px;">
+    <slot />
+  </div>
+</article>

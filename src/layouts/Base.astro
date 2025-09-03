@@ -1,0 +1,27 @@
+---
+const { title = 'Marlow Gate', description = 'Trading data & automation tools' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href="/favicon.png" />
+</head>
+<body style="font-family: ui-sans-serif, system-ui; margin:0; line-height:1.6;">
+  <header style="padding:16px 24px; border-bottom:1px solid #eee;">
+    <a href="/" style="text-decoration:none; color:#111; font-weight:700;">Marlow Gate</a>
+    <nav style="float:right;">
+      <a href="/blog" style="margin-left:16px;">Blog</a>
+    </nav>
+  </header>
+  <main style="padding:24px 20px; max-width:900px; margin:0 auto;">
+    <slot />
+  </main>
+  <footer style="padding:32px 20px; max-width:900px; margin:0 auto; color:#666;">
+    © {new Date().getFullYear()} Marlow Gate
+  </footer>
+</body>
+</html>

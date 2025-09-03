@@ -1,0 +1,17 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+const posts = await getCollection("blog");
+const ordered = posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+---
+<Base title="Blog">
+  <h2>All posts</h2>
+  <ul>
+    {ordered.map((p) => (
+      <li>
+        <a href={`/blog/${p.slug}/`}>{p.data.title}</a>
+        {p.data.pubDate && (<small style="color:#777;"> — {p.data.pubDate.toDateString()}</small>)}
+      </li>
+    ))}
+  </ul>
+</Base>

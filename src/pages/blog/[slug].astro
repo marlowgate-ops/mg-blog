@@ -1,0 +1,16 @@
+---
+import Base from "../../layouts/Base.astro";
+import Post from "../../layouts/Post.astro";
+import { getEntryBySlug } from "astro:content";
+
+const { slug } = Astro.params;
+const entry = await getEntryBySlug("blog", slug);
+if (!entry) throw new Error(`Post not found: ${slug}`);
+const { Content } = await entry.render();
+const { title, description, pubDate } = entry.data;
+---
+<Base title={title} description={description}>
+  <Post title={title} description={description} pubDate={pubDate}>
+    <Content />
+  </Post>
+</Base>
