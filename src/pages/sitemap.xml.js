@@ -1,15 +1,12 @@
----
-// src/pages/sitemap.xml.ts  (PRERENDERED)
-import type { APIRoute } from "astro";
 export const prerender = true;
 
 const SITE = "https://blog.marlowgate.com";
 
-function url(loc: string, lastmod?: string) {
+function urlEntry(loc, lastmod) {
   return `<url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}</url>`;
 }
 
-export const GET: APIRoute = async () => {
+export async function GET() {
   const pages = await Promise.all([
     Astro.glob("../**/*.astro"),
     Astro.glob("../**/*.{md,mdx}"),
@@ -20,8 +17,9 @@ export const GET: APIRoute = async () => {
 
   const dynamic = pages
     .flat()
-    .filter((f: any) => f?.frontmatter?.draft !== true)
-    .map((f: any) => {
+    .map((f) => {
+      const draft = f?.frontmatter?.draft === true;
+      if (draft) return null;
       if (f?.url) return SITE + f.url;
       const fp = (f?.file || f?.filepath || "").toString().replace(/\\/g, "/");
       if (!fp.includes("/pages/")) return null;
@@ -36,7 +34,7 @@ export const GET: APIRoute = async () => {
 
   const urls = Array.from(new Set([...staticRoutes, ...dynamic]))
     .sort()
-    .map((u) => url(u as string))
+    .map((u) => urlEntry(u))
     .join("");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -45,7 +43,6 @@ ${urls}
 </urlset>`;
 
   return new Response(xml, {
-    status: 200,
     headers: { "Content-Type": "application/xml; charset=utf-8" }
   });
-};
+}
