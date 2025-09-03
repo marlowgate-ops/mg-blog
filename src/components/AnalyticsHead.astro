@@ -1,0 +1,28 @@
+---
+// AnalyticsHead.astro (drop-in)
+// Usage: Place <AnalyticsHead /> inside <head> in your Base.astro
+// Toggle via environment variables (no secrets committed):
+//  - PUBLIC_GA4_ID="G-XXXXXXX"
+//  - PUBLIC_PLAUSIBLE_DOMAIN="blog.marlowgate.com" (or "marlowgate.com")
+//  - PUBLIC_PLAUSIBLE_API_HOST (optional, e.g. "https://plausible.io" or self-hosted URL)
+const GA_ID = import.meta.env.PUBLIC_GA4_ID;
+const PLAUSIBLE_DOMAIN = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
+const PLAUSIBLE_API_HOST = import.meta.env.PUBLIC_PLAUSIBLE_API_HOST || "https://plausible.io";
+--->
+
+{GA_ID && (
+  <>
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+    <script set:html={
+`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}', { 'anonymize_ip': true });
+`
+    }></script>
+  </>
+)}
+
+{PLAUSIBLE_DOMAIN && (
+  <script defer data-domain={PLAUSIBLE_DOMAIN} src={`${PLAUSIBLE_API_HOST}/js/script.js`}></script>
+)}
