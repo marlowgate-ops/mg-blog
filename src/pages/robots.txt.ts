@@ -1,11 +1,8 @@
----
-// src/pages/robots.txt.ts  (PRERENDERED)
-import type { APIRoute } from "astro";
 export const prerender = true;
 
 const SITE = "https://blog.marlowgate.com";
 
-export const GET: APIRoute = async () => {
+export async function GET() {
   const body = [
     "User-agent: *",
     "Disallow: /drafts/",
@@ -14,7 +11,6 @@ export const GET: APIRoute = async () => {
   ].join("\n");
 
   return new Response(body, {
-    status: 200,
     headers: { "Content-Type": "text/plain; charset=utf-8" }
   });
-};
+}
