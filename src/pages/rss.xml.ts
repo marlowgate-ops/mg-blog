@@ -1,7 +1,7 @@
 ---
-// src/pages/rss.xml.ts
-// Minimal RSS 2.0 feed without @astrojs/rss dependency.
+// src/pages/rss.xml.ts  (PRERENDERED)
 import type { APIRoute } from "astro";
+export const prerender = true;
 
 const SITE = "https://blog.marlowgate.com";
 const TITLE = "Marlow Gate Blog";
@@ -15,10 +15,9 @@ type Entry = {
 };
 
 export const GET: APIRoute = async () => {
-  // Try to read markdown/MDX posts from common locations
   const posts = await Promise.all([
     Astro.glob("../../content/blog/*.{md,mdx}"),
-    Astro.glob("../blog/*.{md,mdx}"),
+    Astro.glob("../blog/*.{md,mdx}")
   ]);
 
   const items: Entry[] = posts.flat()
@@ -51,6 +50,7 @@ export const GET: APIRoute = async () => {
 </rss>`;
 
   return new Response(xml, {
+    status: 200,
     headers: { "Content-Type": "application/rss+xml; charset=utf-8" }
   });
 };
