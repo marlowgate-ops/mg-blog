@@ -1,8 +1,8 @@
-import { defineConfig } from 'astro/config';
-import mdx from '@astrojs/mdx';
+import { defineConfig } from 'astro/config'
+import mdx from '@astrojs/mdx'
+import sitemap from '@astrojs/sitemap'
 
 export default defineConfig({
-  site: process.env.SITE || 'https://example.com',
-  integrations: [mdx()],
-  trailingSlash: 'ignore',
-});
+  site: 'https://blog.marlowgate.com',   // ここが重要（絶対URL生成に必須）
+  integrations: [mdx(), sitemap()],
+})
