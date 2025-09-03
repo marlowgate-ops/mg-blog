@@ -4,7 +4,9 @@ export const prerender = true;
 
 const { slug } = Astro.params;
 const entry = await getEntryBySlug('blog', slug);
-if (!entry) return Astro.redirect('/');
+if (!entry) {
+  return Astro.redirect('/');
+}
 
 const { Content } = await entry.render();
 const fm = entry.data ?? {};
