@@ -1,7 +1,20 @@
 ---
-import Base from "../layouts/Base.astro";
+import Hero from "../components/Hero.astro";
+import PostCard from "../components/PostCard.astro";
+
+const groups = await Promise.all([
+  Astro.glob("../content/blog/*.{md,mdx}"),
+  Astro.glob("./blog/*.{md,mdx}")
+]);
+const posts = groups.flat()
+  .filter((p) => p?.frontmatter?.draft !== true)
+  .sort((a,b) => new Date(b.frontmatter?.pubDate || b.frontmatter?.date || 0) - new Date(a.frontmatter?.pubDate || a.frontmatter?.date || 0))
+  .slice(0,3);
 ---
-<Base title="Marlow Gate Blog" description="Updates & notes">
-  <h2>Welcome</h2>
-  <p>This is the blog index. Visit <a href="/blog">the posts list</a>.</p>
-</Base>
+<Hero title="Trading data & automation — insights and releases" subtitle="Latest articles and updates from Marlow Gate" ctaHref="/store/" ctaLabel="Go to Store" />
+
+<section style="padding:28px 20px;">
+  <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px;">
+    {posts.map((p) => <PostCard post={p} />)}
+  </div>
+</section>
