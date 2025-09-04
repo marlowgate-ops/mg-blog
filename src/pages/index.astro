@@ -1,50 +1,75 @@
 ---
-import Hero from "../components/Hero.astro";
-import PostCard from "../components/PostCard.astro";
+/**
+ * TOP page (full replace)
+ * - Hero + latest 3 posts
+ * - Works with posts in:
+ *   - src/pages/blog/*.md|mdx  (uses module.url)
+ *   - src/content/blog/*.md|mdx (computes /blog/{slug}/)
+ * - No external deps (inline markup)
+ */
 
-// Use Vite's import.meta.glob which returns an empty object when no matches.
-// This avoids AstroGlobNoMatch errors on empty directories.
+// Gather content (safe when empty)
 const g1 = import.meta.glob("./blog/*.{md,mdx}", { eager: true });
 const g2 = import.meta.glob("./blog/**/*.{md,mdx}", { eager: true });
 const g3 = import.meta.glob("../content/blog/*.{md,mdx}", { eager: true });
 const g4 = import.meta.glob("../content/blog/**/*.{md,mdx}", { eager: true });
 
-function values(obj) {
-  return Object.keys(obj).map((k) => obj[k]);
+function entries(obj) {
+  return Object.entries(obj || {});
 }
 
-const groups = [
-  ...values(g1),
-  ...values(g2),
-  ...values(g3),
-  ...values(g4),
-];
+function toEntry([file, mod]) {
+  const fm = mod.frontmatter || mod.data || {};
+  // href: prefer module.url (for src/pages/blog). Else build from filename (/blog/{slug}/).
+  let href = mod.url;
+  if (!href) {
+    const m = file.match(/(?:^|\/)blog\/(.+?)\.(mdx?|MDX?|md|MD)$/);
+    if (m) href = `/blog/${m[1]}/`;
+  }
+  return {
+    href: href || "#",
+    title: fm.title || "Untitled",
+    description: fm.description || fm.summary || "",
+    date: fm.pubDate || fm.date || null,
+    draft: fm.draft === true,
+  };
+}
 
-const posts = groups
-  .map((mod) => ({
-    href: mod.url || (mod.frontmatter && mod.frontmatter.url) || "#",
-    title: (mod.frontmatter && mod.frontmatter.title) || "Untitled",
-    description: (mod.frontmatter && (mod.frontmatter.description || mod.frontmatter.summary)) || "",
-    date: (mod.frontmatter && (mod.frontmatter.pubDate || mod.frontmatter.date)) || null,
-    raw: mod,
-  }))
-  .filter((p) => p.href && p.href !== "#" && !(p.raw.frontmatter && p.raw.frontmatter.draft === true))
-  .sort((a, b) => {
+const posts = [
+  ...entries(g1).map(toEntry),
+  ...entries(g2).map(toEntry),
+  ...entries(g3).map(toEntry),
+  ...entries(g4).map(toEntry),
+]
+  .filter(p => p.href !== "#" && !p.draft)
+  .sort((a,b) => {
     const da = a.date ? new Date(a.date).getTime() : 0;
     const db = b.date ? new Date(b.date).getTime() : 0;
     return db - da;
   })
   .slice(0, 3);
 ---
-
-<Hero title="Trading data & automation — insights and releases" subtitle="Latest articles and updates from Marlow Gate" ctaHref="/store/" ctaLabel="Go to Store" />
+<!DOCTYPE html>
+<section style="padding:48px 20px; background:#fafafa; border-bottom:1px solid #eee;">
+  <div style="max-width:900px; margin:0 auto;">
+    <h1 style="margin:0 0 12px 0; font-size:28px; line-height:1.25;">Trading data &amp; automation — insights and releases</h1>
+    <p style="margin:0 0 18px 0; color:#555;">Latest articles and updates from Marlow Gate</p>
+    <a href="/store/" style="display:inline-block; padding:10px 16px; border-radius:10px; border:1px solid #111; text-decoration:none; color:#111;">Go to Store</a>
+  </div>
+</section>
 
 <section style="padding:28px 20px;">
   <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px;">
     {posts.length === 0 ? (
       <div style="color:#666;">No posts yet. Add <code>*.md</code> or <code>*.mdx</code> under <code>src/pages/blog/</code> or <code>src/content/blog/</code>.</div>
     ) : (
-      posts.map((p) => <PostCard post={p.raw} />)
+      posts.map((p) => (
+        <a href={p.href} style="display:block; padding:16px; border:1px solid #eee; border-radius:12px; text-decoration:none; color:#111;">
+          <div style="font-weight:600; margin-bottom:6px;">{p.title}</div>
+          {p.description && <div style="color:#555; font-size:14px; margin-bottom:8px;">{p.description}</div>}
+          {p.date && <div style="color:#888; font-size:12px;">{new Date(p.date).toISOString().slice(0,10)}</div>}
+        </a>
+      ))
     )}
   </div>
 </section>
