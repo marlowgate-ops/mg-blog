@@ -2,23 +2,33 @@
 import Hero from "../components/Hero.astro";
 import PostCard from "../components/PostCard.astro";
 
-// Use only literal string arguments with Astro.glob (required by Vite parser)
-const g1 = await Astro.glob("./blog/*.{md,mdx}");
-const g2 = await Astro.glob("./blog/**/*.{md,mdx}");
-const g3 = await Astro.glob("../content/blog/*.{md,mdx}");
-const g4 = await Astro.glob("../content/blog/**/*.{md,mdx}");
+// Use Vite's import.meta.glob which returns an empty object when no matches.
+// This avoids AstroGlobNoMatch errors on empty directories.
+const g1 = import.meta.glob("./blog/*.{md,mdx}", { eager: true });
+const g2 = import.meta.glob("./blog/**/*.{md,mdx}", { eager: true });
+const g3 = import.meta.glob("../content/blog/*.{md,mdx}", { eager: true });
+const g4 = import.meta.glob("../content/blog/**/*.{md,mdx}", { eager: true });
 
-const groups = [...g1, ...g2, ...g3, ...g4];
+function values(obj) {
+  return Object.keys(obj).map((k) => obj[k]);
+}
+
+const groups = [
+  ...values(g1),
+  ...values(g2),
+  ...values(g3),
+  ...values(g4),
+];
 
 const posts = groups
-  .filter((p) => p?.frontmatter?.draft !== true)
-  .map((p) => ({
-    href: p?.url || p?.frontmatter?.url || "#",
-    title: p?.frontmatter?.title || p?.title || "Untitled",
-    description: p?.frontmatter?.description || p?.description || "",
-    date: p?.frontmatter?.pubDate || p?.frontmatter?.date || null,
-    raw: p,
+  .map((mod) => ({
+    href: mod.url || (mod.frontmatter && mod.frontmatter.url) || "#",
+    title: (mod.frontmatter && mod.frontmatter.title) || "Untitled",
+    description: (mod.frontmatter && (mod.frontmatter.description || mod.frontmatter.summary)) || "",
+    date: (mod.frontmatter && (mod.frontmatter.pubDate || mod.frontmatter.date)) || null,
+    raw: mod,
   }))
+  .filter((p) => p.href && p.href !== "#" && !(p.raw.frontmatter && p.raw.frontmatter.draft === true))
   .sort((a, b) => {
     const da = a.date ? new Date(a.date).getTime() : 0;
     const db = b.date ? new Date(b.date).getTime() : 0;
