@@ -1,0 +1,6 @@
+---
+export interface Props { url: string }
+const { url } = Astro.props;
+---
+<blockquote class="twitter-tweet"><a href={url}></a></blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>

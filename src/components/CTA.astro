@@ -1,0 +1,9 @@
+---
+export interface Props { title?: string; body?: string; href?: string; label?: string; }
+const { title = "Get the latest resources", body = "Tools, datasets, and templates for trading automation.", href="/store/", label="Visit Store" } = Astro.props;
+---
+<section style="margin:32px 0; padding:20px; border:1px solid #eee; border-radius:12px;">
+  <div style="font-weight:700; margin-bottom:8px;">{title}</div>
+  <div style="color:#555; margin-bottom:12px;">{body}</div>
+  <a href={href} style="display:inline-block; padding:10px 16px; border-radius:10px; background:#111; color:#fff; text-decoration:none;">{label}</a>
+</section>
