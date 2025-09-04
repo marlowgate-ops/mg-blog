@@ -1,10 +1,18 @@
 ---
+/**
+ * Base layout for mg-blog (blog.marlowgate.com)
+ * - Header: LP, Blog, About, Store
+ * - Footer: handled by SiteFooter.astro (already includes RSS / Sitemap / About / Store)
+ * - AnalyticsHead: reads PUBLIC_GA4_ID or PUBLIC_PLAUSIBLE_DOMAIN
+ */
 const { title = 'Marlow Gate', description = 'Trading data & automation tools' } = Astro.props;
+
+// Use relative imports to avoid alias issues in build environments.
 import AnalyticsHead from "../components/AnalyticsHead.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 ---
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,16 +21,27 @@ import SiteFooter from "../components/SiteFooter.astro";
     <link rel="icon" href="/favicon.png" />
     <AnalyticsHead />
   </head>
-  <body style="font-family: ui-sans-serif, system-ui; margin:0; line-height:1.6;">
-    <header style="padding:16px 24px; border-bottom:1px solid #eee;">
-      <a href="/" style="text-decoration:none; color:#111; font-weight:700;">Marlow Gate</a>
-      <nav style="float:right;">
-        <a href="/blog" style="margin-left:16px;">Blog</a>
-      </nav>
+  <body style="font-family: ui-sans-serif, system-ui; margin:0; line-height:1.65; color:#111;">
+    <header style="padding:14px 20px; border-bottom:1px solid #eee;">
+      <div style="max-width:1000px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;">
+        <a href="/" style="text-decoration:none; color:#111; font-weight:700;">Marlow Gate Blog</a>
+        <nav style="display:flex; gap:18px; font-size:14px;">
+          <a href="https://marlowgate.com/" rel="noopener" style="color:#111; text-decoration:none;">LP</a>
+          <a href="/" style="color:#111; text-decoration:none;">Blog</a>
+          <a href="/about/" style="color:#111; text-decoration:none;">About</a>
+          <a href="/store/" style="color:#111; text-decoration:none;">Store</a>
+          <a href="/rss.xml" style="color:#666; text-decoration:none;">RSS</a>
+          <a href="/sitemap.xml" style="color:#666; text-decoration:none;">Sitemap</a>
+        </nav>
+      </div>
     </header>
-    <main style="padding:24px 20px; max-width:900px; margin:0 auto;">
-      <slot />
+
+    <main style="padding:28px 20px;">
+      <div style="max-width:900px; margin:0 auto;">
+        <slot />
+      </div>
     </main>
+
     <SiteFooter />
   </body>
 </html>
