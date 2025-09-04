@@ -2,24 +2,14 @@
 import Hero from "../components/Hero.astro";
 import PostCard from "../components/PostCard.astro";
 
-async function tryGlob(pattern) {
-  try {
-    return await Astro.glob(pattern);
-  } catch (e) {
-    return [];
-  }
-}
+// Use only literal string arguments with Astro.glob (required by Vite parser)
+const g1 = await Astro.glob("./blog/*.{md,mdx}");
+const g2 = await Astro.glob("./blog/**/*.{md,mdx}");
+const g3 = await Astro.glob("../content/blog/*.{md,mdx}");
+const g4 = await Astro.glob("../content/blog/**/*.{md,mdx}");
 
-const patterns = [
-  "./blog/*.{md,mdx}",
-  "./blog/**/*.{md,mdx}",
-  "../content/blog/*.{md,mdx}",
-  "../content/blog/**/*.{md,mdx}",
-];
+const groups = [...g1, ...g2, ...g3, ...g4];
 
-const groups = (await Promise.all(patterns.map(tryGlob))).flat();
-
-// Normalize and sort
 const posts = groups
   .filter((p) => p?.frontmatter?.draft !== true)
   .map((p) => ({
