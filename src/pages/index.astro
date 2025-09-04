@@ -2,19 +2,49 @@
 import Hero from "../components/Hero.astro";
 import PostCard from "../components/PostCard.astro";
 
-const groups = await Promise.all([
-  Astro.glob("../content/blog/*.{md,mdx}"),
-  Astro.glob("./blog/*.{md,mdx}")
-]);
-const posts = groups.flat()
+async function tryGlob(pattern) {
+  try {
+    return await Astro.glob(pattern);
+  } catch (e) {
+    return [];
+  }
+}
+
+const patterns = [
+  "./blog/*.{md,mdx}",
+  "./blog/**/*.{md,mdx}",
+  "../content/blog/*.{md,mdx}",
+  "../content/blog/**/*.{md,mdx}",
+];
+
+const groups = (await Promise.all(patterns.map(tryGlob))).flat();
+
+// Normalize and sort
+const posts = groups
   .filter((p) => p?.frontmatter?.draft !== true)
-  .sort((a,b) => new Date(b.frontmatter?.pubDate || b.frontmatter?.date || 0) - new Date(a.frontmatter?.pubDate || a.frontmatter?.date || 0))
-  .slice(0,3);
+  .map((p) => ({
+    href: p?.url || p?.frontmatter?.url || "#",
+    title: p?.frontmatter?.title || p?.title || "Untitled",
+    description: p?.frontmatter?.description || p?.description || "",
+    date: p?.frontmatter?.pubDate || p?.frontmatter?.date || null,
+    raw: p,
+  }))
+  .sort((a, b) => {
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db = b.date ? new Date(b.date).getTime() : 0;
+    return db - da;
+  })
+  .slice(0, 3);
 ---
+
 <Hero title="Trading data & automation — insights and releases" subtitle="Latest articles and updates from Marlow Gate" ctaHref="/store/" ctaLabel="Go to Store" />
 
 <section style="padding:28px 20px;">
   <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px;">
-    {posts.map((p) => <PostCard post={p} />)}
+    {posts.length === 0 ? (
+      <div style="color:#666;">No posts yet. Add <code>*.md</code> or <code>*.mdx</code> under <code>src/pages/blog/</code> or <code>src/content/blog/</code>.</div>
+    ) : (
+      posts.map((p) => <PostCard post={p.raw} />)
+    )}
   </div>
 </section>
