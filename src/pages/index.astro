@@ -1,33 +1,35 @@
 ---
 /**
- * TOP page (full replace)
- * - Hero + latest 3 posts
- * - Works with posts in:
- *   - src/pages/blog/*.md|mdx  (uses module.url)
- *   - src/content/blog/*.md|mdx (computes /blog/{slug}/)
- * - No external deps (inline markup)
+ * TOP page (full replace, strict)
+ * - Always link to /blog/{slug}/ for any content under src/pages/blog or src/content/blog
+ * - Ignores module.url if it points to a source path like 'src/content/...'
  */
 
-// Gather content (safe when empty)
 const g1 = import.meta.glob("./blog/*.{md,mdx}", { eager: true });
 const g2 = import.meta.glob("./blog/**/*.{md,mdx}", { eager: true });
 const g3 = import.meta.glob("../content/blog/*.{md,mdx}", { eager: true });
 const g4 = import.meta.glob("../content/blog/**/*.{md,mdx}", { eager: true });
 
-function entries(obj) {
-  return Object.entries(obj || {});
+function entries(obj) { return Object.entries(obj || {}); }
+
+function slugFromFile(file) {
+  const m = file.match(/(?:^|\/)blog\/(.+?)\.(mdx?|MDX?|md|MD)$/);
+  return m ? m[1] : null;
+}
+
+function toHref(file, mod) {
+  const fromFile = slugFromFile(file);
+  const modUrl = typeof mod.url === "string" ? mod.url : null;
+
+  if (fromFile) return `/blog/${fromFile}/`;
+  if (modUrl && /^\/blog\//.test(modUrl)) return modUrl;
+  return "/";
 }
 
 function toEntry([file, mod]) {
   const fm = mod.frontmatter || mod.data || {};
-  // href: prefer module.url (for src/pages/blog). Else build from filename (/blog/{slug}/).
-  let href = mod.url;
-  if (!href) {
-    const m = file.match(/(?:^|\/)blog\/(.+?)\.(mdx?|MDX?|md|MD)$/);
-    if (m) href = `/blog/${m[1]}/`;
-  }
   return {
-    href: href || "#",
+    href: toHref(file, mod),
     title: fm.title || "Untitled",
     description: fm.description || fm.summary || "",
     date: fm.pubDate || fm.date || null,
@@ -41,7 +43,7 @@ const posts = [
   ...entries(g3).map(toEntry),
   ...entries(g4).map(toEntry),
 ]
-  .filter(p => p.href !== "#" && !p.draft)
+  .filter(p => p.href && !p.draft)
   .sort((a,b) => {
     const da = a.date ? new Date(a.date).getTime() : 0;
     const db = b.date ? new Date(b.date).getTime() : 0;
