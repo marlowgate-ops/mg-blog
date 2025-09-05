@@ -9,26 +9,19 @@ export const prerender = true;
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Look for any of these in src/assets/fonts/
-const FONT_CANDIDATES = [
-  'NotoSansJP-700.woff2',            // webfont kit名
-  'NotoSansJP-Bold.woff2',           // 700 woff2
-  'NotoSansJP-Bold.ttf',             // 700 ttf （Google Fonts static/）
-  'NotoSansJP-VariableFont_wght.ttf' // 可変フォント（weightは700指定）
-];
+// Fonts are expected to be placed NEXT TO this file at build time.
+// Put either `NotoSansJP-Bold.ttf` or `NotoSansJP-VariableFont_wght.ttf` into `src/pages/og/`.
+const LOCAL_SAME_DIR = ['./NotoSansJP-Bold.ttf', './NotoSansJP-VariableFont_wght.ttf'];
 
-async function loadLocalFont(): Promise<{data: ArrayBuffer, weight: number, name: string}> {
-  const base = '../../assets/fonts/';
-  for (const fname of FONT_CANDIDATES) {
+async function loadFont(): Promise<ArrayBuffer> {
+  for (const rel of LOCAL_SAME_DIR) {
     try {
-      const url = new URL(base + fname, import.meta.url);
+      const url = new URL(rel, import.meta.url);
       const buf = await readFile(url);
-      const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-      const weight = fname.includes('VariableFont') ? 700 : 700; // すべて700として使う
-      return { data: ab, weight, name: 'NotoSansJP' };
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
     } catch (_) {}
   }
-  throw new Error('OG: font file not found. Put one of ' + FONT_CANDIDATES.join(', ') + ' under src/assets/fonts/');
+  throw new Error('OG: font not found next to endpoint. Place NotoSansJP-Bold.ttf or NotoSansJP-VariableFont_wght.ttf in src/pages/og/');
 }
 
 function truncate(str: string, max = 88) {
@@ -102,12 +95,12 @@ export const GET: APIRoute = async ({ params }) => {
   const title = truncate(post?.data.title ?? 'Marlow Gate');
   const description = truncate(post?.data.description ?? '');
 
-  const { data: fontData, weight } = await loadLocalFont();
+  const fontData = await loadFont();
 
   const svg = await satori(card(title, description), {
     width: WIDTH,
     height: HEIGHT,
-    fonts: [{ name: 'NotoSansJP', data: fontData, weight, style: 'normal' }],
+    fonts: [{ name: 'NotoSansJP', data: fontData, weight: 700, style: 'normal' }],
   });
 
   const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: WIDTH }, background: 'white' });
