@@ -1,4 +1,3 @@
----
 import { getCollection } from 'astro:content';
 
 export const prerender = true;
@@ -17,7 +16,6 @@ export async function GET() {
   const items = posts.map(p => {
     const url = `${SITE}/blog/${p.slug}/`;
     const title = esc(p.data.title ?? p.slug);
-    const desc = esc(p.data.description ?? '');
     const date = new Date(p.data.pubDate ?? Date.now()).toUTCString();
     return `<item>
       <title>${title}</title>
