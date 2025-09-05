@@ -4,16 +4,22 @@ import PostCard from '../../../components/PostCard.astro';
 import Pagination from '../../../components/Pagination.astro';
 
 const PER = 12;
+
+/** Build-time: pre-generate /blog/page/1..N */
+export async function getStaticPaths() {
+  const all = (await getCollection('blog'))
+    .filter(p => !(p.data?.draft === true))
+    .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
+  const totalPages = Math.max(1, Math.ceil(all.length / PER));
+  return Array.from({ length: totalPages }, (_, i) => ({ params: { page: String(i + 1) } }));
+}
+
+/** Page data for current page */
+const current = Number(Astro.params.page || '1');
 const all = (await getCollection('blog'))
   .filter(p => !(p.data?.draft === true))
   .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
 const totalPages = Math.max(1, Math.ceil(all.length / PER));
-
-export async function getStaticPaths() {
-  return Array.from({length: totalPages}, (_, i) => ({ params: { page: String(i+1) } }));
-}
-
-const current = Number(Astro.params.page || '1');
 const start = (current - 1) * PER;
 const pageItems = all.slice(start, start + PER);
 ---
