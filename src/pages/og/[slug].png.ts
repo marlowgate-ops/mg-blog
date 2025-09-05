@@ -2,24 +2,22 @@ import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
+import { readFile } from 'node:fs/promises';
 
 export const prerender = true;
 
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Build-time font cache
-const fontCache = new Map<number, ArrayBuffer>();
-async function loadGoogleFont(weight: number = 700) {
-  if (fontCache.has(weight)) return fontCache.get(weight)!;
-  const cssUrl = `https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@${weight}&display=swap`;
-  const css = await fetch(cssUrl).then((r) => r.text());
-  const match = css.match(/https:[^\)]+\.woff2/g);
-  if (!match || !match[0]) throw new Error('OG: failed to extract font URL from Google Fonts CSS');
-  const fontUrl = match[0];
-  const fontData = await fetch(fontUrl).then((r) => r.arrayBuffer());
-  fontCache.set(weight, fontData);
-  return fontData;
+async function loadFont(): Promise<ArrayBuffer> {
+  // Load local font file (no external fetch)
+  const p = new URL('../../assets/fonts/NotoSansJP-700.woff2', import.meta.url);
+  try {
+    const buf = await readFile(p);
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  } catch (e) {
+    throw new Error('OG: local font not found at src/assets/fonts/NotoSansJP-700.woff2');
+  }
 }
 
 function truncate(str: string, max = 88) {
@@ -93,7 +91,7 @@ export const GET: APIRoute = async ({ params }) => {
   const title = truncate(post?.data.title ?? 'Marlow Gate');
   const description = truncate(post?.data.description ?? '');
 
-  const fontData = await loadGoogleFont(700);
+  const fontData = await loadFont();
 
   const svg = await satori(card(title, description), {
     width: WIDTH,
