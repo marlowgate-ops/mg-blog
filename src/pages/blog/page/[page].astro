@@ -1,12 +1,12 @@
+
 ---
 import { getCollection } from 'astro:content';
 import PostCard from '../../../components/PostCard.astro';
 import Pagination from '../../../components/Pagination.astro';
 
-const PER = 12;
-
-/** Build-time: pre-generate /blog/page/1..N */
+/** Build-time: pre-generate /blog/page/1..N (scoped PER to avoid undefined) */
 export async function getStaticPaths() {
+  const PER = 12;
   const all = (await getCollection('blog'))
     .filter(p => !(p.data?.draft === true))
     .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
@@ -14,7 +14,8 @@ export async function getStaticPaths() {
   return Array.from({ length: totalPages }, (_, i) => ({ params: { page: String(i + 1) } }));
 }
 
-/** Page data for current page */
+/** Page data for current page (independent calculation) */
+const PER = 12;
 const current = Number(Astro.params.page || '1');
 const all = (await getCollection('blog'))
   .filter(p => !(p.data?.draft === true))
