@@ -14,9 +14,9 @@
     "@astrojs/rss": "^4.0.5",
     "@astrojs/sitemap": "^3.1.5",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "satori": "^0.10.0",
+    "@resvg/resvg-js": "^2.6.0"
   }
-}
-"devDependencies": {
-  "satori": "^0.10.0",
-  "@resvg/resvg-js": "^2.6.0"
 }
