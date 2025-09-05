@@ -1,14 +1,12 @@
 ---
 /**
- * TOP page (full replace, strict)
- * - Always link to /blog/{slug}/ for any content under src/pages/blog or src/content/blog
- * - Ignores module.url if it points to a source path like 'src/content/...'
+ * TOP page (full replace, strict, de-dup)
+ * - Always links to /blog/{slug}/
+ * - De-duplicates posts if multiple globs match the same file
  */
 
-const g1 = import.meta.glob("./blog/*.{md,mdx}", { eager: true });
-const g2 = import.meta.glob("./blog/**/*.{md,mdx}", { eager: true });
-const g3 = import.meta.glob("../content/blog/*.{md,mdx}", { eager: true });
-const g4 = import.meta.glob("../content/blog/**/*.{md,mdx}", { eager: true });
+const g1 = import.meta.glob("./blog/**/*.{md,mdx}", { eager: true });
+const g2 = import.meta.glob("../content/blog/**/*.{md,mdx}", { eager: true });
 
 function entries(obj) { return Object.entries(obj || {}); }
 
@@ -17,19 +15,13 @@ function slugFromFile(file) {
   return m ? m[1] : null;
 }
 
-function toHref(file, mod) {
-  const fromFile = slugFromFile(file);
-  const modUrl = typeof mod.url === "string" ? mod.url : null;
-
-  if (fromFile) return `/blog/${fromFile}/`;
-  if (modUrl && /^\/blog\//.test(modUrl)) return modUrl;
-  return "/";
-}
-
 function toEntry([file, mod]) {
   const fm = mod.frontmatter || mod.data || {};
+  const slug = slugFromFile(file);
+  const href = slug ? `/blog/${slug}/` : (typeof mod.url === "string" && /^\/blog\//.test(mod.url) ? mod.url : "/");
   return {
-    href: toHref(file, mod),
+    key: href, // for dedup
+    href,
     title: fm.title || "Untitled",
     description: fm.description || fm.summary || "",
     date: fm.pubDate || fm.date || null,
@@ -37,13 +29,22 @@ function toEntry([file, mod]) {
   };
 }
 
-const posts = [
-  ...entries(g1).map(toEntry),
-  ...entries(g2).map(toEntry),
-  ...entries(g3).map(toEntry),
-  ...entries(g4).map(toEntry),
-]
-  .filter(p => p.href && !p.draft)
+// collect & dedup by href
+const map = new Map();
+[...entries(g1), ...entries(g2)].map(toEntry).forEach((p) => {
+  if (!p.draft && p.href && p.href !== "/") {
+    // keep the latest date if duplicates
+    const prev = map.get(p.key);
+    if (!prev) map.set(p.key, p);
+    else {
+      const da = p.date ? new Date(p.date).getTime() : 0;
+      const db = prev.date ? new Date(prev.date).getTime() : 0;
+      if (da >= db) map.set(p.key, p);
+    }
+  }
+});
+
+const posts = Array.from(map.values())
   .sort((a,b) => {
     const da = a.date ? new Date(a.date).getTime() : 0;
     const db = b.date ? new Date(b.date).getTime() : 0;
