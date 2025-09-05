@@ -5,4 +5,23 @@ pubDate: 2025-09-03
 layout: ../../layouts/Article.astro
 ---
 
-This is a **minimal MDX** post. If you can read this on `/blog/hello-world`, the build worked 🎉.
+This is a minimal MDX post. If you can read this on `/blog/hello-world`, the build worked 🎉.
+
+## Introduction
+
+A short section to demonstrate the Table of Contents.
+You should see a **Contents** box on the left (desktop) or above (mobile).
+
+### What you can test
+
+- Headings (`##`, `###`) appear in TOC.
+- Footnotes like this[^note] render below.
+- Code blocks show a *Copy* button:
+
+```ts
+export function add(a: number, b: number) {
+  return a + b;
+}
+```
+
+[^note]: This is a sample footnote. Click the backlink to return.
