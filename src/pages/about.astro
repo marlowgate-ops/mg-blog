@@ -1,0 +1,31 @@
+---
+import SiteNav from "../components/SiteNav.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+const title = "About — Marlow Gate";
+const description = "About this blog and the projects we are building.";
+---
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={Astro.url?.href} />
+  </head>
+  <body style="font-family: ui-sans-serif, system-ui; margin:0; color:#111; line-height:1.65;">
+    <SiteNav />
+    <main style="padding:28px 20px;">
+      <div style="max-width:900px; margin:0 auto;">
+        <h1 style="margin:0 0 12px 0; font-size:28px;">About</h1>
+        <p>Trading data & automation tools. This blog shares release notes, insights, and how we build.</p>
+        <ul>
+          <li>LP: <a href="https://marlowgate.com/">https://marlowgate.com/</a></li>
+          <li>Store: <a href="https://marlowgate.com/store/">https://marlowgate.com/store/</a></li>
+          <li>RSS: <a href="/rss.xml">/rss.xml</a>, Sitemap: <a href="/sitemap-index.xml">/sitemap-index.xml</a></li>
+        </ul>
+      </div>
+    </main>
+    <SiteFooter />
+  </body>
+</html>
