@@ -21,7 +21,14 @@ const authorName = fm.author ?? "Marlow Gate";
     <meta name="description" content={description} />
     <MetaArticle url={url} title={title} description={description} datePublished={datePublished} authorName={authorName} />
     <style>
-      /* Typography & layout */
+      /* Layout: single column on mobile, sidebar TOC on desktop */
+      .grid { max-width: 1080px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:28px; }
+      @media (min-width: 960px) {
+        .grid { grid-template-columns: 240px 1fr; align-items:start; }
+        #toc-wrap { position: sticky; top: 16px; }
+      }
+
+      /* Typography & components */
       article { font-size:16px; }
       article h2 { margin:28px 0 10px; font-size:24px; line-height:1.35; }
       article h3 { margin:22px 0 8px; font-size:18px; line-height:1.4; }
@@ -36,10 +43,9 @@ const authorName = fm.author ?? "Marlow Gate";
       pre { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:12px; overflow:auto; margin:16px 0; }
       code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.95em; }
       pre code { display:block; }
-      /* Inline code */
       :not(pre) > code { background: #f4f4f5; color:#111; padding:2px 6px; border-radius:6px; }
 
-      /* Footnotes (remark-footnotes / GFM) */
+      /* Footnotes */
       sup[role="doc-noteref"] a { text-decoration:none; }
       .footnotes { font-size:13px; color:#444; }
       .footnotes hr { display:none; }
@@ -55,11 +61,11 @@ const authorName = fm.author ?? "Marlow Gate";
   <body style="font-family: ui-sans-serif, system-ui; margin:0; color:#111; line-height:1.65;">
     <SiteNav />
     <main style="padding:28px 20px;">
-      <div style="max-width:980px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:24px;">
+      <div class="grid">
         <div id="toc-wrap">
           <Toc />
         </div>
-        <article style="max-width:800px;">
+        <article>
           <h1 style="margin:0 0 12px 0; font-size:30px; line-height:1.25;">{title}</h1>
           {description && <p style="color:#555; margin-top:0;">{description}</p>}
           <slot />
