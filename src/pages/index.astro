@@ -1,23 +1,13 @@
 ---
-import SiteNav from "../components/SiteNav.astro";
-import SiteFooter from "../components/SiteFooter.astro";
+import { getCollection } from 'astro:content';
+import PostCard from '../components/PostCard.astro';
 
-const g1 = import.meta.glob("./blog/**/*.{md,mdx}", { eager: true });
-const g2 = import.meta.glob("../content/blog/**/*.{md,mdx}", { eager: true });
+const origin = Astro.site?.origin ?? 'https://blog.marlowgate.com';
+const all = (await getCollection('blog'))
+  .filter(p => !(p.data?.draft === true))
+  .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
 
-function entries(obj) { return Object.entries(obj || {}); }
-function slugFromFile(file) { const m = file.match(/(?:^|\/)blog\/(.+?)\.(mdx?|MDX?|md|MD)$/); return m ? m[1] : null; }
-
-function toEntry([file, mod]) {
-  const fm = mod.frontmatter || mod.data || {};
-  const slug = slugFromFile(file);
-  const href = slug ? `/blog/${slug}/` : (typeof mod.url === "string" && /^\/blog\//.test(mod.url) ? mod.url : "/");
-  return { key: href, href, title: fm.title || "Untitled", description: fm.description || fm.summary || "", date: fm.pubDate || fm.date || null, draft: fm.draft === true };
-}
-
-const map = new Map();
-[...entries(g1), ...entries(g2)].map(toEntry).forEach((p) => { if (!p.draft && p.href && p.href !== "/") { const prev = map.get(p.key); const da = p.date ? new Date(p.date).getTime() : 0; const db = prev?.date ? new Date(prev.date).getTime() : 0; if (!prev || da >= db) map.set(p.key,p); } });
-const posts = Array.from(map.values()).sort((a,b)=>{const da=a.date?new Date(a.date).getTime():0; const db=b.date?new Date(b.date).getTime():0; return db-da;}).slice(0,3);
+const latest = all.slice(0, 6);
 ---
 <!DOCTYPE html>
 <html lang="ja">
@@ -26,32 +16,73 @@ const posts = Array.from(map.values()).sort((a,b)=>{const da=a.date?new Date(a.d
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Marlow Gate — Blog</title>
     <meta name="description" content="Latest articles and updates from Marlow Gate" />
-    <link rel="canonical" href={Astro.url?.href} />
+    <link rel="canonical" href={origin + '/'} />
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+    <style>
+      :root{ --line:#eee; --max:980px; }
+      body{ margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP"; color:#111; }
+      a{ color:inherit; }
+      nav{ border-bottom:1px solid var(--line); background:#fff; }
+      nav .inner{ max-width:var(--max); margin:0 auto; padding:14px 20px; display:flex; justify-content:space-between; gap:14px; }
+      nav a{ text-decoration:none; }
+      nav .brand{ font-weight:700; }
+      .hero{ padding:48px 20px; border-bottom:1px solid var(--line); background:#fafafa; }
+      .hero .inner{ max-width:var(--max); margin:0 auto; }
+      .hero h1{ margin:0 0 12px 0; font-size:28px; line-height:1.25; }
+      .grid{ padding:28px 20px; }
+      .grid .inner{ max-width:var(--max); margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px; }
+      @media(min-width:760px){ .grid .inner{ grid-template-columns:1fr 1fr; } }
+      @media(min-width:1100px){ .grid .inner{ grid-template-columns:1fr 1fr 1fr; } }
+      footer{ border-top:1px solid var(--line); color:#666; background:#fafafa; }
+      footer .inner{ max-width:var(--max); margin:0 auto; padding:22px 20px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    </style>
   </head>
-  <body style="font-family: ui-sans-serif, system-ui; margin:0; color:#111; line-height:1.65;">
-    <SiteNav />
-    <section style="padding:48px 20px; background:#fafafa; border-bottom:1px solid #eee;">
-      <div style="max-width:900px; margin:0 auto;">
-        <h1 style="margin:0 0 12px 0; font-size:28px; line-height:1.25;">Trading data &amp; automation — insights and releases</h1>
+  <body>
+    <nav aria-label="Primary">
+      <div class="inner">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <a class="brand" href="https://marlowgate.com/">Marlow Gate</a>
+          <a href="/blog/">Blog</a>
+          <a href="/about">About</a>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <a href="/rss.xml">RSS</a>
+          <a href="/sitemap-index.xml">Sitemap</a>
+          <a href="https://marlowgate.com/store/">Store</a>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="inner">
+        <h1>Trading data &amp; automation — insights and releases</h1>
         <p style="margin:0 0 18px 0; color:#555;">Latest articles and updates from Marlow Gate</p>
         <a href="/store/" style="display:inline-block; padding:10px 16px; border-radius:10px; border:1px solid #111; text-decoration:none; color:#111;">Go to Store</a>
       </div>
     </section>
-    <section style="padding:28px 20px;">
-      <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px;">
-        {posts.length === 0 ? (
-          <div style="color:#666;">No posts yet. Add <code>*.md</code> or <code>*.mdx</code> under <code>src/pages/blog/</code> or <code>src/content/blog/</code>.</div>
-        ) : (
-          posts.map((p) => (
-            <a href={p.href} style="display:block; padding:16px; border:1px solid #eee; border-radius:12px; text-decoration:none; color:#111;">
-              <div style="font-weight:600; margin-bottom:6px;">{p.title}</div>
-              {p.description && <div style="color:#555; font-size:14px; margin-bottom:8px;">{p.description}</div>}
-              {p.date && <div style="color:#888; font-size:12px;">{new Date(p.date).toISOString().slice(0,10)}</div>}
-            </a>
-          ))
-        )}
+
+    <section class="grid">
+      <div class="inner">
+        {latest.map(p => (
+          <PostCard
+            href={`/blog/${p.slug}/`}
+            title={p.data.title}
+            description={p.data.description}
+            date={p.data.pubDate}
+            tags={p.data.tags}
+          />
+        ))}
       </div>
     </section>
-    <SiteFooter />
+
+    <footer>
+      <div class="inner">
+        <div>© {new Date().getFullYear()} Marlow Gate</div>
+        <div>
+          <a href="/blog/">Blog</a> · <a href="/about">About</a> · <a href="/rss.xml">RSS</a> · <a href="/sitemap-index.xml">Sitemap</a> · <a href="https://marlowgate.com/">LP</a> · <a href="https://marlowgate.com/store/">Store</a>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
