@@ -1,0 +1,18 @@
+---
+interface Props {
+  current: number;
+  last: number;
+  base?: string; // e.g., '/blog/page'
+}
+const { current, last, base = '/blog/page' } = Astro.props as Props;
+function to(n: number) {
+  return n === 1 ? '/blog/' : `${base}/${n}/`;
+}
+---
+<nav aria-label="Pagination" style="display:flex; gap:8px; align-items:center; justify-content:center; margin:24px 0;">
+  <a href={current>1 ? to(current-1) : undefined} aria-disabled={current===1} style="padding:8px 12px; border:1px solid #eee; border-radius:10px; text-decoration:none; color:#111; opacity:{current===1?0.4:1}">Prev</a>
+  {Array.from({length:last}, (_,i)=>i+1).map(n => (
+    <a href={to(n)} aria-current={n===current ? 'page' : undefined} style={`padding:8px 12px; border:1px solid #eee; border-radius:10px; text-decoration:none; color:#111; ${n===current ? 'background:#111;color:#fff;' : ''}`}>{n}</a>
+  ))}
+  <a href={current<last ? to(current+1) : undefined} aria-disabled={current===last} style="padding:8px 12px; border:1px solid #eee; border-radius:10px; text-decoration:none; color:#111; opacity:{current===last?0.4:1}">Next</a>
+</nav>
