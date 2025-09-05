@@ -1,23 +1,4 @@
 ---
-/**
- * Article layout (full file, production-ready)
- * - Places OG/Twitter meta (auto-builds og URL from slug)
- * - Canonical, RSS, Sitemap links
- * - Clean typography with inlined CSS
- * - Optional Table of Contents (headings from Markdown/MDX)
- * - Code blocks: adds "Copy" button (vanilla JS)
- * - Footnotes ready
- *
- * Usage from content:
- * ---
- * layout: ../layouts/Article.astro
- * title: "Post title"
- * description: "Post description"
- * pubDate: 2025-09-01
- * updatedDate: 2025-09-02
- * tags: [astro, blog]
- * ---
- */
 import type { MarkdownHeading } from 'astro';
 const { frontmatter, headings = [] as MarkdownHeading[] } = Astro.props as any;
 
@@ -31,6 +12,7 @@ const description = frontmatter.description ?? '';
 const pubISO = (frontmatter.pubDate && new Date(frontmatter.pubDate).toISOString()) || undefined;
 const modISO = (frontmatter.updatedDate && new Date(frontmatter.updatedDate).toISOString()) || undefined;
 const canonical = `${origin}${path}`;
+const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
 ---
 <!DOCTYPE html>
 <html lang="ja">
@@ -87,6 +69,7 @@ const canonical = `${origin}${path}`;
       .meta{color:var(--muted);font-size:14px;display:flex;gap:10px;flex-wrap:wrap}
       .tags{display:flex;gap:8px;flex-wrap:wrap}
       .tag{padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:#333;background:#fff;font-size:12px}
+      .tag a{text-decoration:none;color:#333}
 
       /* Article content */
       .prose{font-size:18px}
@@ -101,6 +84,9 @@ const canonical = `${origin}${path}`;
       table{border-collapse:collapse;width:100%}
       th,td{border:1px solid var(--line);padding:8px 10px}
       hr{border:none;border-top:1px solid var(--line);margin:28px 0}
+
+      .footer-tags{margin-top:22px; display:flex; gap:8px; flex-wrap:wrap}
+      .footer-tags a{border:1px solid var(--line); border-radius:999px; padding:4px 10px; font-size:12px; color:#333; text-decoration:none}
 
       footer{border-top:1px solid var(--line);background:var(--bg-soft);color:#555}
       footer .inner{max-width:var(--max);margin:0 auto;padding:22px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -124,7 +110,6 @@ const canonical = `${origin}${path}`;
     </nav>
 
     <div class="wrap">
-      <!-- TOC (auto from headings) -->
       {headings.length > 0 && (
         <aside class="toc" aria-label="Contents">
           <h2>Contents</h2>
@@ -144,9 +129,9 @@ const canonical = `${origin}${path}`;
           <div class="meta">
             {frontmatter.pubDate && <time datetime={pubISO}>Published: {new Date(frontmatter.pubDate).toLocaleDateString('ja-JP')}</time>}
             {frontmatter.updatedDate && <time datetime={modISO}>Updated: {new Date(frontmatter.updatedDate).toLocaleDateString('ja-JP')}</time>}
-            {Array.isArray(frontmatter.tags) && frontmatter.tags.length > 0 && (
+            {tags.length > 0 && (
               <span class="tags">
-                {frontmatter.tags.map((t: string) => <span class="tag">{t}</span>)}
+                {tags.map((t: string) => <span class="tag"><a href={`/tags/${encodeURIComponent(t)}/`}>{t}</a></span>)}
               </span>
             )}
           </div>
@@ -155,6 +140,12 @@ const canonical = `${origin}${path}`;
         <div class="prose">
           <slot />
         </div>
+
+        {tags.length > 0 && (
+          <div class="footer-tags" aria-label="Tags">
+            {tags.map((t: string) => <a href={`/tags/${encodeURIComponent(t)}/`}>#{t}</a>)}
+          </div>
+        )}
       </article>
     </div>
 
@@ -168,7 +159,6 @@ const canonical = `${origin}${path}`;
     </footer>
 
     <script is:inline>
-      // Add "Copy" button for code blocks
       (function(){
         document.querySelectorAll('pre > code').forEach((code) => {
           const pre = code.parentElement;
@@ -188,7 +178,6 @@ const canonical = `${origin}${path}`;
       })();
     </script>
 
-    <!-- JSON-LD (Article) -->
     <script type="application/ld+json" is:inline>
       {JSON.stringify({
         "@context":"https://schema.org",
