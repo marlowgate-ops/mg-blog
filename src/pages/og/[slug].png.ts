@@ -9,19 +9,38 @@ export const prerender = true;
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Fonts are expected to be placed NEXT TO this file at build time.
-// Put either `NotoSansJP-Bold.ttf` or `NotoSansJP-VariableFont_wght.ttf` into `src/pages/og/`.
-const LOCAL_SAME_DIR = ['./NotoSansJP-Bold.ttf', './NotoSansJP-VariableFont_wght.ttf'];
+// Fonts copied from /public/fonts -> /dist/fonts at build time
+const PUBLIC_FONT_CANDIDATES = [
+  '../../../fonts/NotoSansJP-Bold.ttf',
+  '../../../fonts/NotoSansJP-VariableFont_wght.ttf',
+];
+
+// Fallback: same directory as this file (dev convenience)
+const LOCAL_SAME_DIR = [
+  './NotoSansJP-Bold.ttf',
+  './NotoSansJP-VariableFont_wght.ttf',
+];
+
+async function tryRead(rel: string): Promise<ArrayBuffer | null> {
+  try {
+    const url = new URL(rel, import.meta.url);
+    const buf = await readFile(url);
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  } catch {
+    return null;
+  }
+}
 
 async function loadFont(): Promise<ArrayBuffer> {
-  for (const rel of LOCAL_SAME_DIR) {
-    try {
-      const url = new URL(rel, import.meta.url);
-      const buf = await readFile(url);
-      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-    } catch (_) {}
+  for (const rel of PUBLIC_FONT_CANDIDATES) {
+    const ab = await tryRead(rel);
+    if (ab) return ab;
   }
-  throw new Error('OG: font not found next to endpoint. Place NotoSansJP-Bold.ttf or NotoSansJP-VariableFont_wght.ttf in src/pages/og/');
+  for (const rel of LOCAL_SAME_DIR) {
+    const ab = await tryRead(rel);
+    if (ab) return ab;
+  }
+  throw new Error('OG: font not found. Put NotoSansJP-Bold.ttf in public/fonts/ (recommended) or next to this file.');
 }
 
 function truncate(str: string, max = 88) {
