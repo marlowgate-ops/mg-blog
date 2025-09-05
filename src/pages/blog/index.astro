@@ -1,17 +1,72 @@
 ---
-import Base from "../../layouts/Base.astro";
-import { getCollection } from "astro:content";
-const posts = await getCollection("blog");
-const ordered = posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+import { getCollection } from 'astro:content';
+import PostCard from '../../components/PostCard.astro';
+
+const posts = (await getCollection('blog'))
+  .filter(p => !(p.data?.draft === true))
+  .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
 ---
-<Base title="Blog">
-  <h2>All posts</h2>
-  <ul>
-    {ordered.map((p) => (
-      <li>
-        <a href={`/blog/${p.slug}/`}>{p.data.title}</a>
-        {p.data.pubDate && (<small style="color:#777;"> — {p.data.pubDate.toDateString()}</small>)}
-      </li>
-    ))}
-  </ul>
-</Base>
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blog — Marlow Gate</title>
+    <meta name="description" content="All posts from Marlow Gate" />
+    <style>
+      :root{ --line:#eee; --max:980px; }
+      body{ margin:0; font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP"; color:#111; }
+      a{ color:inherit; }
+      nav{ border-bottom:1px solid var(--line); background:#fff; }
+      nav .inner{ max-width:var(--max); margin:0 auto; padding:14px 20px; display:flex; justify-content:space-between; gap:14px; }
+      nav .brand{ font-weight:700; text-decoration:none; }
+      .hd{ max-width:var(--max); margin:0 auto; padding:28px 20px; }
+      .grid{ padding:0 20px 28px; }
+      .grid .inner{ max-width:var(--max); margin:0 auto; display:grid; grid-template-columns:1fr; gap:16px; }
+      @media(min-width:760px){ .grid .inner{ grid-template-columns:1fr 1fr; } }
+      @media(min-width:1100px){ .grid .inner{ grid-template-columns:1fr 1fr 1fr; } }
+      footer{ border-top:1px solid var(--line); color:#666; background:#fafafa; }
+      footer .inner{ max-width:var(--max); margin:0 auto; padding:22px 20px; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    </style>
+  </head>
+  <body>
+    <nav aria-label="Primary">
+      <div class="inner">
+        <a class="brand" href="https://marlowgate.com/">Marlow Gate</a>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <a href="/">Home</a>
+          <a href="/about">About</a>
+          <a href="/rss.xml">RSS</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hd">
+      <h1 style="margin:0 0 8px 0;">All posts</h1>
+      <p style="color:#555; margin:0;">最新記事から順に表示します。</p>
+    </header>
+
+    <section class="grid">
+      <div class="inner">
+        {posts.map(p => (
+          <PostCard
+            href={`/blog/${p.slug}/`}
+            title={p.data.title}
+            description={p.data.description}
+            date={p.data.pubDate}
+            tags={p.data.tags}
+          />
+        ))}
+      </div>
+    </section>
+
+    <footer>
+      <div class="inner">
+        <div>© {new Date().getFullYear()} Marlow Gate</div>
+        <div>
+          <a href="/blog/">Blog</a> · <a href="/about">About</a> · <a href="/rss.xml">RSS</a> · <a href="/sitemap-index.xml">Sitemap</a> · <a href="https://marlowgate.com/">LP</a> · <a href="https://marlowgate.com/store/">Store</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
