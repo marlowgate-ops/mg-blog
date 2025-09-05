@@ -1,10 +1,14 @@
 ---
 import { getCollection } from 'astro:content';
 import PostCard from '../../components/PostCard.astro';
+import Pagination from '../../components/Pagination.astro';
 
-const posts = (await getCollection('blog'))
+const PER = 12;
+const all = (await getCollection('blog'))
   .filter(p => !(p.data?.draft === true))
   .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
+const totalPages = Math.max(1, Math.ceil(all.length / PER));
+const pageItems = all.slice(0, PER);
 ---
 <!DOCTYPE html>
 <html lang="ja">
@@ -48,7 +52,7 @@ const posts = (await getCollection('blog'))
 
     <section class="grid">
       <div class="inner">
-        {posts.map(p => (
+        {pageItems.map(p => (
           <PostCard
             href={`/blog/${p.slug}/`}
             title={p.data.title}
@@ -59,6 +63,8 @@ const posts = (await getCollection('blog'))
         ))}
       </div>
     </section>
+
+    {totalPages > 1 && <Pagination current={1} last={totalPages} />}
 
     <footer>
       <div class="inner">
