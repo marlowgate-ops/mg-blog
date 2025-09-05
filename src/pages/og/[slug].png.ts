@@ -1,0 +1,110 @@
+import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
+import satori from 'satori';
+import { Resvg } from '@resvg/resvg-js';
+
+export const prerender = true;
+
+const WIDTH = 1200;
+const HEIGHT = 630;
+
+// Build-time font cache
+const fontCache = new Map<number, ArrayBuffer>();
+async function loadGoogleFont(weight: number = 700) {
+  if (fontCache.has(weight)) return fontCache.get(weight)!;
+  const cssUrl = `https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@${weight}&display=swap`;
+  const css = await fetch(cssUrl).then((r) => r.text());
+  const match = css.match(/https:[^\)]+\.woff2/g);
+  if (!match || !match[0]) throw new Error('OG: failed to extract font URL from Google Fonts CSS');
+  const fontUrl = match[0];
+  const fontData = await fetch(fontUrl).then((r) => r.arrayBuffer());
+  fontCache.set(weight, fontData);
+  return fontData;
+}
+
+function truncate(str: string, max = 88) {
+  if (!str) return '';
+  return str.length > max ? str.slice(0, max - 1) + '…' : str;
+}
+
+function card(title: string, description?: string) {
+  return {
+    type: 'div',
+    props: {
+      style: {
+        width: WIDTH + 'px',
+        height: HEIGHT + 'px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        background: '#ffffff',
+        color: '#0f172a',
+        padding: '56px',
+        boxSizing: 'border-box',
+        fontFamily: 'NotoSansJP',
+      },
+      children: [
+        {
+          type: 'div',
+          props: {
+            style: { display: 'flex', alignItems: 'center', gap: '12px', fontSize: '22px', color: '#334155' },
+            children: [
+              { type: 'div', props: { style: { width: '14px', height: '14px', background: '#111', borderRadius: '4px' } } },
+              { type: 'div', props: { children: 'Marlow Gate — Blog' } },
+            ],
+          },
+        },
+        {
+          type: 'div',
+          props: {
+            style: { display: 'flex', flexDirection: 'column', gap: '18px' },
+            children: [
+              { type: 'div', props: { style: { fontSize: '56px', fontWeight: 700, lineHeight: 1.15 }, children: title } },
+              description
+                ? { type: 'div', props: { style: { fontSize: '28px', color: '#475569' }, children: description } }
+                : null,
+            ],
+          },
+        },
+        {
+          type: 'div',
+          props: {
+            style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '22px', color: '#475569' },
+            children: [
+              { type: 'div', props: { children: 'blog.marlowgate.com' } },
+              { type: 'div', props: { style: { background: '#111', color: '#fff', padding: '10px 14px', borderRadius: '10px', fontSize: '20px' }, children: 'Trading data & automation' } },
+            ],
+          },
+        },
+      ],
+    },
+  } as any;
+}
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((p) => ({ params: { slug: p.slug } }));
+}
+
+export const GET: APIRoute = async ({ params }) => {
+  const slug = params.slug as string;
+  const posts = await getCollection('blog');
+  const post = posts.find((p) => p.slug === slug);
+  const title = truncate(post?.data.title ?? 'Marlow Gate');
+  const description = truncate(post?.data.description ?? '');
+
+  const fontData = await loadGoogleFont(700);
+
+  const svg = await satori(card(title, description), {
+    width: WIDTH,
+    height: HEIGHT,
+    fonts: [{ name: 'NotoSansJP', data: fontData, weight: 700, style: 'normal' }],
+  });
+
+  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: WIDTH }, background: 'white' });
+  const png = resvg.render().asPng();
+
+  return new Response(png, {
+    headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000, immutable' },
+  });
+};
