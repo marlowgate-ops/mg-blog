@@ -1,25 +1,11 @@
 ---
-/**
- * Article layout (production-ready)
- * - JSON-LD Article via MetaArticle
- * - TOC (h2/h3) on the side/top (responsive)
- * - CTA block at the end
- * - TweetEmbed can be used inside content wherever needed
- *
- * Usage in a .md/.mdx frontmatter:
- * ---
- * layout: ../layouts/Article.astro
- * title: "タイトル"
- * description: "要約"
- * pubDate: "2025-09-05"
- * draft: false
- * ---
- */
-const fm = Astro.props as Record<string, any>;
+import SiteNav from "../components/SiteNav.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 import Toc from "../components/Toc.astro";
 import CTA from "../components/CTA.astro";
 import MetaArticle from "../components/MetaArticle.astro";
 
+const fm = Astro.props || {};
 const url = Astro.url?.href ?? "";
 const title = fm.title ?? "Untitled";
 const description = fm.description ?? "";
@@ -33,29 +19,15 @@ const authorName = fm.author ?? "Marlow Gate";
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} — Marlow Gate</title>
     <meta name="description" content={description} />
-    <MetaArticle
-      url={url}
-      title={title}
-      description={description}
-      datePublished={datePublished}
-      authorName={authorName}
-    />
+    <MetaArticle url={url} title={title} description={description} datePublished={datePublished} authorName={authorName} />
   </head>
   <body style="font-family: ui-sans-serif, system-ui; margin:0; color:#111; line-height:1.65;">
-    <header style="padding:16px 20px; border-bottom:1px solid #eee;">
-      <div style="max-width:980px; margin:0 auto;">
-        <a href="/" style="text-decoration:none; color:#111; font-weight:700;">Marlow Gate Blog</a>
-      </div>
-    </header>
-
+    <SiteNav />
     <main style="padding:28px 20px;">
       <div style="max-width:980px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:24px;">
-        <!-- TOC -->
         <div id="toc-wrap">
           <Toc />
         </div>
-
-        <!-- Article -->
         <article style="max-width:800px;">
           <h1 style="margin:0 0 12px 0; font-size:30px; line-height:1.25;">{title}</h1>
           {description && <p style="color:#555; margin-top:0;">{description}</p>}
@@ -64,5 +36,6 @@ const authorName = fm.author ?? "Marlow Gate";
         </article>
       </div>
     </main>
+    <SiteFooter />
   </body>
 </html>
