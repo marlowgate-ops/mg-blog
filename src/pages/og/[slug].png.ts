@@ -9,10 +9,11 @@ export const prerender = true;
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-// Fonts copied from /public/fonts -> /dist/fonts at build time
+// Fonts copied from /public/fonts -> /dist/fonts at build time.
+// NOTE: Compiled endpoint lives in dist/pages/og/ => dist/fonts is "../../fonts/..."
 const PUBLIC_FONT_CANDIDATES = [
-  '../../../fonts/NotoSansJP-Bold.ttf',
-  '../../../fonts/NotoSansJP-VariableFont_wght.ttf',
+  '../../fonts/NotoSansJP-Bold.ttf',
+  '../../fonts/NotoSansJP-VariableFont_wght.ttf',
 ];
 
 // Fallback: same directory as this file (dev convenience)
