@@ -1,12 +1,16 @@
 ---
 /**
- * Toc.astro
- * Client-side Table of Contents
- * - Collects h2/h3 inside <article>
- * - Highlights current heading on scroll
- * - No dependencies; safe in static output
+ * Toc.astro (fixed)
+ * - Ensures h2/h3 have IDs (slugify) before building TOC
+ * - Builds TOC on DOMContentLoaded (and immediately if DOM is ready)
+ * - Highlights active section
  */
 const title = "Contents";
+function slugify(s) {
+  return s.toLowerCase().trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-]/g, '');
+}
 ---
 <aside id="toc" style="position:sticky; top:16px;">
   <div style="font-weight:700; margin-bottom:8px;">{title}</div>
@@ -16,33 +20,51 @@ const title = "Contents";
 </aside>
 
 <script>
-  // Build TOC from h2/h3 inside the closest <article>
-  const container = document.currentScript.closest('html').querySelector('article') || document.querySelector('article');
-  const list = document.getElementById('toc-list');
-  if (container && list) {
-    const headings = Array.from(container.querySelectorAll('h2, h3')).filter(h => h.id);
-    headings.forEach(h => {
+(function() {
+  function buildTOC() {
+    const container = document.querySelector('article');
+    const list = document.getElementById('toc-list');
+    if (!container || !list) return;
+    list.innerHTML = '';
+
+    const h = Array.from(container.querySelectorAll('h2, h3'));
+    // Ensure IDs
+    h.forEach(el => {
+      if (!el.id) {
+        el.id = el.textContent ? el.textContent.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'') : '';
+      }
+    });
+
+    const headings = h.filter(el => el.id);
+    headings.forEach(el => {
       const li = document.createElement('li');
       const a = document.createElement('a');
-      a.href = `#${h.id}`;
-      a.textContent = h.textContent.trim();
+      a.href = `#${el.id}`;
+      a.textContent = el.textContent.trim();
       a.style.textDecoration = 'none';
       a.style.color = '#111';
-      a.style.fontSize = h.tagName === 'H3' ? '13px' : '14px';
-      a.style.paddingLeft = h.tagName === 'H3' ? '12px' : '0px';
+      a.style.fontSize = el.tagName === 'H3' ? '13px' : '14px';
+      a.style.paddingLeft = el.tagName === 'H3' ? '12px' : '0px';
       li.appendChild(a);
       list.appendChild(li);
     });
 
-    // Active section highlight
+    // Highlight current heading
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const id = entry.target.id;
-          list.querySelectorAll('a').forEach(a => a.style.fontWeight = a.getAttribute('href') === `#${id}` ? '700' : '400');
+          list.querySelectorAll('a').forEach(a => a.style.fontWeight = (a.getAttribute('href') === `#${id}`) ? '700' : '400');
         }
       });
     }, { rootMargin: '0px 0px -60% 0px', threshold: 0.1 });
-    headings.forEach(h => observer.observe(h));
+    headings.forEach(el => observer.observe(el));
   }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildTOC, { once: true });
+  } else {
+    buildTOC();
+  }
+})();
 </script>
