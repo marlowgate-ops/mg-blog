@@ -9,15 +9,26 @@ export const prerender = true;
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-async function loadFont(): Promise<ArrayBuffer> {
-  // Load local font file (no external fetch)
-  const p = new URL('../../assets/fonts/NotoSansJP-700.woff2', import.meta.url);
-  try {
-    const buf = await readFile(p);
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-  } catch (e) {
-    throw new Error('OG: local font not found at src/assets/fonts/NotoSansJP-700.woff2');
+// Look for any of these in src/assets/fonts/
+const FONT_CANDIDATES = [
+  'NotoSansJP-700.woff2',            // webfont kit名
+  'NotoSansJP-Bold.woff2',           // 700 woff2
+  'NotoSansJP-Bold.ttf',             // 700 ttf （Google Fonts static/）
+  'NotoSansJP-VariableFont_wght.ttf' // 可変フォント（weightは700指定）
+];
+
+async function loadLocalFont(): Promise<{data: ArrayBuffer, weight: number, name: string}> {
+  const base = '../../assets/fonts/';
+  for (const fname of FONT_CANDIDATES) {
+    try {
+      const url = new URL(base + fname, import.meta.url);
+      const buf = await readFile(url);
+      const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+      const weight = fname.includes('VariableFont') ? 700 : 700; // すべて700として使う
+      return { data: ab, weight, name: 'NotoSansJP' };
+    } catch (_) {}
   }
+  throw new Error('OG: font file not found. Put one of ' + FONT_CANDIDATES.join(', ') + ' under src/assets/fonts/');
 }
 
 function truncate(str: string, max = 88) {
@@ -91,12 +102,12 @@ export const GET: APIRoute = async ({ params }) => {
   const title = truncate(post?.data.title ?? 'Marlow Gate');
   const description = truncate(post?.data.description ?? '');
 
-  const fontData = await loadFont();
+  const { data: fontData, weight } = await loadLocalFont();
 
   const svg = await satori(card(title, description), {
     width: WIDTH,
     height: HEIGHT,
-    fonts: [{ name: 'NotoSansJP', data: fontData, weight: 700, style: 'normal' }],
+    fonts: [{ name: 'NotoSansJP', data: fontData, weight, style: 'normal' }],
   });
 
   const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: WIDTH }, background: 'white' });
