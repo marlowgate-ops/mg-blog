@@ -1,5 +1,6 @@
 ---
 import type { MarkdownHeading } from 'astro';
+import CTA from '../components/CTA.astro';
 const { frontmatter, headings = [] as MarkdownHeading[] } = Astro.props as any;
 
 const origin = Astro.site?.origin ?? 'https://blog.marlowgate.com';
@@ -13,6 +14,7 @@ const pubISO = (frontmatter.pubDate && new Date(frontmatter.pubDate).toISOString
 const modISO = (frontmatter.updatedDate && new Date(frontmatter.updatedDate).toISOString()) || undefined;
 const canonical = `${origin}${path}`;
 const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
+const isDraft = frontmatter.draft === true;
 ---
 <!DOCTYPE html>
 <html lang="ja">
@@ -23,7 +25,8 @@ const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml" />
-    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    {isDraft && <meta name="robots" content="noindex, nofollow" />}
     <!-- Open Graph -->
     <meta property="og:type" content="article" />
     <meta property="og:title" content={title} />
@@ -103,7 +106,7 @@ const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
         </div>
         <div class="right">
           <a href="/rss.xml">RSS</a>
-          <a href="/sitemap-index.xml">Sitemap</a>
+          <a href="/sitemap.xml">Sitemap</a>
           <a href="https://marlowgate.com/store/">Store</a>
         </div>
       </div>
@@ -146,6 +149,8 @@ const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
             {tags.map((t: string) => <a href={`/tags/${encodeURIComponent(t)}/`}>#{t}</a>)}
           </div>
         )}
+
+        <CTA />
       </article>
     </div>
 
@@ -153,7 +158,7 @@ const tags = Array.isArray(frontmatter.tags) ? frontmatter.tags : [];
       <div class="inner">
         <div>© {new Date().getFullYear()} Marlow Gate</div>
         <div>
-          <a href="/blog/">Blog</a> · <a href="/about">About</a> · <a href="/rss.xml">RSS</a> · <a href="/sitemap-index.xml">Sitemap</a> · <a href="https://marlowgate.com/">LP</a> · <a href="https://marlowgate.com/store/">Store</a>
+          <a href="/blog/">Blog</a> · <a href="/about">About</a> · <a href="/rss.xml">RSS</a> · <a href="/sitemap.xml">Sitemap</a> · <a href="https://marlowgate.com/">LP</a> · <a href="https://marlowgate.com/store/">Store</a>
         </div>
       </div>
     </footer>
