@@ -1,30 +1,48 @@
 ---
-export interface Props { selector?: string; title?: string; }
-const { selector = "article h2, article h3", title = "Contents" } = Astro.props;
+/**
+ * Toc.astro
+ * Client-side Table of Contents
+ * - Collects h2/h3 inside <article>
+ * - Highlights current heading on scroll
+ * - No dependencies; safe in static output
+ */
+const title = "Contents";
 ---
-<aside id="toc" style="border:1px solid #eee; border-radius:12px; padding:12px; font-size:14px;">
-  <div style="font-weight:600; margin-bottom:8px;">{title}</div>
-  <nav id="toc-list"></nav>
+<aside id="toc" style="position:sticky; top:16px;">
+  <div style="font-weight:700; margin-bottom:8px;">{title}</div>
+  <nav aria-label="Table of contents">
+    <ol id="toc-list" style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px;"></ol>
+  </nav>
 </aside>
 
 <script>
-  const selector = '"article h2, article h3"';
-  const nav = document.querySelector('#toc-list');
-  const heads = Array.from(document.querySelectorAll(selector));
-  if (heads.length && nav) {
-    const ul = document.createElement('ul');
-    ul.style.listStyle='none'; ul.style.padding='0'; ul.style.margin='0';
-    heads.forEach(h => {
-      const id = h.id || h.textContent.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'');
-      h.id = id;
+  // Build TOC from h2/h3 inside the closest <article>
+  const container = document.currentScript.closest('html').querySelector('article') || document.querySelector('article');
+  const list = document.getElementById('toc-list');
+  if (container && list) {
+    const headings = Array.from(container.querySelectorAll('h2, h3')).filter(h => h.id);
+    headings.forEach(h => {
       const li = document.createElement('li');
-      li.style.margin = '6px 0';
-      li.style.paddingLeft = h.tagName === 'H3' ? '12px' : '0';
       const a = document.createElement('a');
-      a.href = '#' + id; a.textContent = h.textContent;
-      a.style.textDecoration='none'; a.style.color='#111';
-      li.appendChild(a); ul.appendChild(li);
+      a.href = `#${h.id}`;
+      a.textContent = h.textContent.trim();
+      a.style.textDecoration = 'none';
+      a.style.color = '#111';
+      a.style.fontSize = h.tagName === 'H3' ? '13px' : '14px';
+      a.style.paddingLeft = h.tagName === 'H3' ? '12px' : '0px';
+      li.appendChild(a);
+      list.appendChild(li);
     });
-    nav.appendChild(ul);
+
+    // Active section highlight
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.id;
+          list.querySelectorAll('a').forEach(a => a.style.fontWeight = a.getAttribute('href') === `#${id}` ? '700' : '400');
+        }
+      });
+    }, { rootMargin: '0px 0px -60% 0px', threshold: 0.1 });
+    headings.forEach(h => observer.observe(h));
   }
 </script>
