@@ -1,103 +1,207 @@
 ---
-import SiteNav from "../components/SiteNav.astro";
-import SiteFooter from "../components/SiteFooter.astro";
-import Toc from "../components/Toc.astro";
-import CTA from "../components/CTA.astro";
-import MetaArticle from "../components/MetaArticle.astro";
+/**
+ * Article layout (full file, production-ready)
+ * - Places OG/Twitter meta (auto-builds og URL from slug)
+ * - Canonical, RSS, Sitemap links
+ * - Clean typography with inlined CSS
+ * - Optional Table of Contents (headings from Markdown/MDX)
+ * - Code blocks: adds "Copy" button (vanilla JS)
+ * - Footnotes ready
+ *
+ * Usage from content:
+ * ---
+ * layout: ../layouts/Article.astro
+ * title: "Post title"
+ * description: "Post description"
+ * pubDate: 2025-09-01
+ * updatedDate: 2025-09-02
+ * tags: [astro, blog]
+ * ---
+ */
+import type { MarkdownHeading } from 'astro';
+const { frontmatter, headings = [] as MarkdownHeading[] } = Astro.props as any;
 
-const fm = Astro.props || {};
-const url = Astro.url?.href ?? "";
-const title = fm.title ?? "Untitled";
-const description = fm.description ?? "";
-const datePublished = fm.pubDate ?? fm.date ?? undefined;
-const authorName = fm.author ?? "Marlow Gate";
-const pathname = new URL(url).pathname.replace(/\/$/, '');
-const slug = pathname.split('/').filter(Boolean).pop();
-const ogImage = slug ? `/og/${slug}.png` : '/og/site.png';
+const origin = Astro.site?.origin ?? 'https://blog.marlowgate.com';
+const path = Astro.url.pathname;
+const slug = path.replace(/^\/blog\//, '').replace(/\/$/, '');
+const og = `${origin}/og/${slug}.png`;
+
+const title = frontmatter.title ?? 'Untitled';
+const description = frontmatter.description ?? '';
+const pubISO = (frontmatter.pubDate && new Date(frontmatter.pubDate).toISOString()) || undefined;
+const modISO = (frontmatter.updatedDate && new Date(frontmatter.updatedDate).toISOString()) || undefined;
+const canonical = `${origin}${path}`;
 ---
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title} — Marlow Gate</title>
     <meta name="description" content={description} />
-    <MetaArticle url={url} title={title} description={description} datePublished={datePublished} authorName={authorName} />
-    <meta property="og:image" content={ogImage} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="/rss.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={og} />
+    <meta property="og:image:alt" content={title} />
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={og} />
+    <!-- Article dates -->
+    {pubISO && <meta property="article:published_time" content={pubISO} />}
+    {modISO && <meta property="article:modified_time" content={modISO} />}
+
     <style>
-      .grid { max-width: 1080px; margin:0 auto; display:grid; grid-template-columns: 1fr; gap:28px; }
-      @media (min-width: 960px) { .grid { grid-template-columns: 240px 1fr; align-items:start; } #toc-wrap { position: sticky; top: 16px; } }
-      article { font-size:16px; }
-      article h2 { margin:28px 0 10px; font-size:24px; line-height:1.35; }
-      article h3 { margin:22px 0 8px; font-size:18px; line-height:1.4; }
-      article p, article li { line-height:1.85; }
-      article ul, article ol { padding-left:22px; }
-      article blockquote { margin:16px 0; padding:10px 14px; border-left:3px solid #ddd; background:#fafafa; color:#333; }
-      article table { border-collapse: collapse; width:100%; margin:16px 0; }
-      article th, article td { border:1px solid #eee; padding:8px 10px; text-align:left; }
-      article img { max-width:100%; height:auto; border-radius:10px; }
-      pre { background:#0f172a; color:#e2e8f0; padding:14px 16px; border-radius:12px; overflow:auto; margin:16px 0; }
-      code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.95em; }
-      pre code { display:block; }
-      :not(pre) > code { background: #f4f4f5; color:#111; padding:2px 6px; border-radius:6px; }
-      sup[role="doc-noteref"] a { text-decoration:none; }
-      .footnotes { font-size:13px; color:#444; }
-      .footnotes hr { display:none; }
-      .footnotes ol { padding-left:20px; }
-      .footnotes li { margin-bottom:6px; }
-      .footnotes a[role="doc-backlink"] { margin-left:8px; text-decoration:none; color:#666; }
-      article h2:hover a.anchor, article h3:hover a.anchor { opacity:1; }
-      a.anchor { opacity:0; margin-left:6px; text-decoration:none; color:#aaa; }
+      :root{
+        --fg:#111; --muted:#666; --line:#eee; --bg:#fff; --bg-soft:#fafafa;
+        --max: 980px;
+      }
+      html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Segoe UI Emoji", "Apple Color Emoji", "Segoe UI Symbol";line-height:1.7}
+      a{color:inherit}
+      /* Nav */
+      nav{border-bottom:1px solid var(--line);background:#fff}
+      nav .inner{max-width:var(--max);margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+      nav .left, nav .right{display:flex;align-items:center;gap:14px}
+      nav a{text-decoration:none}
+      nav .brand{font-weight:700}
+
+      /* Layout */
+      .wrap{max-width:var(--max);margin:0 auto;padding:28px 20px;display:grid;grid-template-columns:1fr;gap:28px}
+      @media(min-width:1024px){ .wrap{grid-template-columns:240px 1fr} }
+      .toc{position:sticky; top:24px; align-self:start; border:1px solid var(--line); border-radius:12px; padding:14px; background:var(--bg-soft)}
+      .toc h2{font-size:14px;margin:0 0 8px 0;color:#333}
+      .toc ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+      .toc a{color:#333;text-decoration:none}
+      .toc .lvl2{padding-left:12px}
+      .toc .lvl3{padding-left:24px}
+
+      article header{margin:8px 0 16px 0}
+      .title{font-size:32px;line-height:1.25;margin:0 0 8px 0;font-weight:800}
+      .meta{color:var(--muted);font-size:14px;display:flex;gap:10px;flex-wrap:wrap}
+      .tags{display:flex;gap:8px;flex-wrap:wrap}
+      .tag{padding:2px 8px;border:1px solid var(--line);border-radius:999px;color:#333;background:#fff;font-size:12px}
+
+      /* Article content */
+      .prose{font-size:18px}
+      .prose h2{font-size:24px;margin:32px 0 8px 0}
+      .prose h3{font-size:20px;margin:24px 0 6px 0}
+      .prose p{margin:12px 0}
+      .prose blockquote{border-left:3px solid #ddd;margin:16px 0;padding:8px 14px;color:#333;background:#fafafa}
+      .prose code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;background:#f6f6f6;padding:2px 4px;border-radius:6px}
+      pre{background:#0b1020;color:#e6edf3;border-radius:12px;padding:14px 16px;overflow:auto;position:relative}
+      pre .copy{position:absolute;top:8px;right:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;padding:4px 8px;border-radius:8px;font-size:12px;cursor:pointer}
+      img{max-width:100%;height:auto;border-radius:10px}
+      table{border-collapse:collapse;width:100%}
+      th,td{border:1px solid var(--line);padding:8px 10px}
+      hr{border:none;border-top:1px solid var(--line);margin:28px 0}
+
+      footer{border-top:1px solid var(--line);background:var(--bg-soft);color:#555}
+      footer .inner{max-width:var(--max);margin:0 auto;padding:22px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+      footer a{text-decoration:none;color:#666}
     </style>
   </head>
-  <body style="font-family: ui-sans-serif, system-ui; margin:0; color:#111; line-height:1.65;">
-    <SiteNav />
-    <main style="padding:28px 20px;">
-      <div class="grid">
-        <div id="toc-wrap">
-          <Toc />
+  <body>
+    <nav aria-label="Primary">
+      <div class="inner">
+        <div class="left">
+          <a href="https://marlowgate.com/" class="brand">Marlow Gate</a>
+          <a href="/blog/">Blog</a>
+          <a href="/about">About</a>
         </div>
-        <article>
-          <h1 style="margin:0 0 12px 0; font-size:30px; line-height:1.25;">{title}</h1>
-          {description && <p style="color:#555; margin-top:0;">{description}</p>}
-          <slot />
-          <CTA />
-        </article>
+        <div class="right">
+          <a href="/rss.xml">RSS</a>
+          <a href="/sitemap-index.xml">Sitemap</a>
+          <a href="https://marlowgate.com/store/">Store</a>
+        </div>
       </div>
-    </main>
-    <SiteFooter />
-    <script>
-      const article = document.querySelector('article');
-      if (article) {
-        const headings = article.querySelectorAll('h2, h3');
-        headings.forEach(h => {
-          if (!h.id) { h.id = h.textContent.trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,''); }
-          const a = document.createElement('a');
-          a.href = `#${h.id}`;
-          a.className = 'anchor';
-          a.textContent = '¶';
-          h.appendChild(a);
+    </nav>
+
+    <div class="wrap">
+      <!-- TOC (auto from headings) -->
+      {headings.length > 0 && (
+        <aside class="toc" aria-label="Contents">
+          <h2>Contents</h2>
+          <ul>
+            {headings.map((h) => (
+              <li class={`lvl${h.depth}`}>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+
+      <article>
+        <header>
+          <h1 class="title">{title}</h1>
+          <div class="meta">
+            {frontmatter.pubDate && <time datetime={pubISO}>Published: {new Date(frontmatter.pubDate).toLocaleDateString('ja-JP')}</time>}
+            {frontmatter.updatedDate && <time datetime={modISO}>Updated: {new Date(frontmatter.updatedDate).toLocaleDateString('ja-JP')}</time>}
+            {Array.isArray(frontmatter.tags) && frontmatter.tags.length > 0 && (
+              <span class="tags">
+                {frontmatter.tags.map((t: string) => <span class="tag">{t}</span>)}
+              </span>
+            )}
+          </div>
+        </header>
+
+        <div class="prose">
+          <slot />
+        </div>
+      </article>
+    </div>
+
+    <footer>
+      <div class="inner">
+        <div>© {new Date().getFullYear()} Marlow Gate</div>
+        <div>
+          <a href="/blog/">Blog</a> · <a href="/about">About</a> · <a href="/rss.xml">RSS</a> · <a href="/sitemap-index.xml">Sitemap</a> · <a href="https://marlowgate.com/">LP</a> · <a href="https://marlowgate.com/store/">Store</a>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline>
+      // Add "Copy" button for code blocks
+      (function(){
+        document.querySelectorAll('pre > code').forEach((code) => {
+          const pre = code.parentElement;
+          if (!pre) return;
+          const btn = document.createElement('button');
+          btn.className = 'copy';
+          btn.textContent = 'Copy';
+          btn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(code.textContent || '');
+              btn.textContent = 'Copied!';
+              setTimeout(() => btn.textContent = 'Copy', 1200);
+            } catch {}
+          });
+          pre.appendChild(btn);
         });
-      }
-      document.querySelectorAll('pre > code').forEach((code) => {
-        const pre = code.parentElement;
-        const btn = document.createElement('button');
-        btn.textContent = 'Copy';
-        btn.style.cssText = 'position:absolute; right:10px; top:8px; padding:4px 8px; border:1px solid #334155; background:#1e293b; color:#e2e8f0; border-radius:6px; cursor:pointer;';
-        const wrap = document.createElement('div');
-        wrap.style.position = 'relative';
-        pre.parentNode.insertBefore(wrap, pre);
-        wrap.appendChild(pre);
-        wrap.appendChild(btn);
-        btn.addEventListener('click', () => {
-          navigator.clipboard.writeText(code.textContent);
-          btn.textContent = 'Copied!';
-          setTimeout(() => btn.textContent = 'Copy', 1200);
-        });
-      });
+      })();
+    </script>
+
+    <!-- JSON-LD (Article) -->
+    <script type="application/ld+json" is:inline>
+      {JSON.stringify({
+        "@context":"https://schema.org",
+        "@type":"Article",
+        "headline": title,
+        "description": description,
+        "url": canonical,
+        "image": og,
+        "datePublished": pubISO,
+        "dateModified": modISO,
+        "author": {"@type":"Organization","name":"Marlow Gate"},
+        "publisher": {"@type":"Organization","name":"Marlow Gate"}
+      })}
     </script>
   </body>
 </html>
