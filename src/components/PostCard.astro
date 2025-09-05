@@ -1,20 +1,25 @@
 ---
-export interface PostLike {
-  url?: string;
-  frontmatter?: any;
-  title?: string;
+interface Props {
+  href: string;
+  title: string;
   description?: string;
-  pubDate?: string;
+  date?: string | Date;
+  tags?: string[];
 }
-const { post } = Astro.props as { post: PostLike };
-const href = post?.url || post?.frontmatter?.url || "#";
-const title = post?.frontmatter?.title || post?.title || "Untitled";
-const desc = post?.frontmatter?.description || post?.description || "";
-const date = post?.frontmatter?.pubDate || post?.frontmatter?.date || post?.pubDate;
-const iso = date ? new Date(date).toISOString().slice(0,10) : "";
+const { href, title, description = "", date, tags = [] } = Astro.props as Props;
+const d = date ? new Date(date) : undefined;
 ---
-<a href={href} style="display:block; padding:16px; border:1px solid #eee; border-radius:12px; text-decoration:none; color:#111;">
-  <div style="font-weight:600; margin-bottom:6px;">{title}</div>
-  {desc && <div style="color:#555; font-size:14px; margin-bottom:8px;">{desc}</div>}
-  {iso && <div style="color:#888; font-size:12px;">{iso}</div>}
-</a>
+<article style="border:1px solid #eee; border-radius:14px; padding:16px; background:#fff;">
+  <a href={href} style="text-decoration:none; color:#111; display:block;">
+    <h3 style="margin:0 0 6px 0; font-size:18px; line-height:1.4;">{title}</h3>
+    {description && <p style="margin:0 0 8px 0; color:#555; font-size:14px;">{description}</p>}
+    <div style="display:flex; align-items:center; gap:10px; color:#888; font-size:12px;">
+      {d && <time datetime={d.toISOString()}>{d.toLocaleDateString('ja-JP')}</time>}
+      {tags.length > 0 && (
+        <span style="display:flex; gap:6px; flex-wrap:wrap;">
+          {tags.map(t => <span style="border:1px solid #eee; border-radius:999px; padding:2px 8px; color:#555;">{t}</span>)}
+        </span>
+      )}
+    </div>
+  </a>
+</article>
