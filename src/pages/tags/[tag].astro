@@ -2,20 +2,23 @@
 import { getCollection } from 'astro:content';
 import PostCard from '../../components/PostCard.astro';
 
-const all = (await getCollection('blog')).filter(p => !(p.data?.draft === true));
-const byTag = new Map<string, any[]>();
-for (const p of all) {
-  const tags = Array.isArray(p.data.tags) ? p.data.tags : [];
-  for (const t of tags) {
-    if (!byTag.has(t)) byTag.set(t, []);
-    byTag.get(t)!.push(p);
-  }
-}
+/** Build-time: enumerate available tags */
 export async function getStaticPaths() {
-  return Array.from(byTag.keys()).map(tag => ({ params: { tag } }));
+  const all = (await getCollection('blog')).filter(p => !(p.data?.draft === true));
+  const tagSet = new Set<string>();
+  for (const p of all) {
+    const tags = Array.isArray(p.data.tags) ? p.data.tags : [];
+    for (const t of tags) tagSet.add(String(t));
+  }
+  return Array.from(tagSet).map(tag => ({ params: { tag } }));
 }
+
+/** Page data for a specific tag */
 const { tag } = Astro.params;
-const posts = (byTag.get(String(tag)) || []).sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
+const posts = (await getCollection('blog'))
+  .filter(p => !(p.data?.draft === true))
+  .filter(p => (Array.isArray(p.data.tags) ? p.data.tags : []).includes(String(tag)))
+  .sort((a,b) => new Date(b.data.pubDate ?? 0).getTime() - new Date(a.data.pubDate ?? 0).getTime());
 ---
 <!DOCTYPE html>
 <html lang="ja">
